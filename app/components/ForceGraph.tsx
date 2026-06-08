@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useTheme } from '../theme';
 
 interface Node {
   id: string;
@@ -57,7 +58,8 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 export default function ForceGraph({ data, onNodeClick }: { data: GraphData; onNodeClick?: (node: Node | null) => void }) {
-  if (!data?.nodes?.length) return <div style={{ height: 460, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>No graph data available</div>;
+  const t = useTheme();
+  if (!data?.nodes?.length) return <div style={{ height: 460, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.textFaint, fontSize: 13 }}>No graph data available</div>;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
   const nodesRef = useRef<SimNode[]>([]);

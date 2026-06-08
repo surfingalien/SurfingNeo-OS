@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useTheme } from '../theme';
 
 interface DataPoint {
   date: string;
@@ -12,14 +13,14 @@ interface DataPoint {
 
 type Metric = 'knowledgeNodes' | 'apiRequests' | 'brainScore' | 'insights';
 
-const METRICS: { key: Metric; label: string; color: string }[] = [
-  { key: 'brainScore', label: 'Brain Score', color: '#00ff88' },
-  { key: 'knowledgeNodes', label: 'KB Nodes', color: '#00ccff' },
-  { key: 'apiRequests', label: 'API Requests', color: '#ffaa00' },
-  { key: 'insights', label: 'Insights', color: '#cc88ff' },
-];
-
 export default function ImprovementChart({ data }: { data: DataPoint[] }) {
+  const t = useTheme();
+  const METRICS: { key: Metric; label: string; color: string }[] = [
+    { key: 'brainScore', label: 'Brain Score', color: t.success },
+    { key: 'knowledgeNodes', label: 'KB Nodes', color: t.secondary },
+    { key: 'apiRequests', label: 'API Requests', color: t.accent },
+    { key: 'insights', label: 'Insights', color: t.primary },
+  ];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [activeMetrics, setActiveMetrics] = useState<Set<Metric>>(new Set<Metric>(['brainScore', 'knowledgeNodes', 'apiRequests']));
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
@@ -64,7 +65,7 @@ export default function ImprovementChart({ data }: { data: DataPoint[] }) {
       ctx!.clearRect(0, 0, w * dpr, h * dpr);
 
       // Grid
-      ctx!.strokeStyle = '#111';
+      ctx!.strokeStyle = t.border;
       ctx!.lineWidth = 1;
       for (let i = 0; i <= 4; i++) {
         const y = pad.top + (ch / 4) * i;
@@ -119,7 +120,7 @@ export default function ImprovementChart({ data }: { data: DataPoint[] }) {
       }
 
       // X axis labels
-      ctx!.fillStyle = '#333';
+      ctx!.fillStyle = t.textFaint;
       ctx!.font = '9px system-ui';
       ctx!.textAlign = 'center';
       data.forEach((d, i) => {
@@ -132,7 +133,7 @@ export default function ImprovementChart({ data }: { data: DataPoint[] }) {
       const hi = hoverIdxRef.current;
       if (hi !== null && hi >= 0 && hi < data.length) {
         const x = pad.left + (hi / (data.length - 1)) * cw;
-        ctx!.strokeStyle = '#222';
+        ctx!.strokeStyle = t.borderStrong;
         ctx!.lineWidth = 1;
         ctx!.setLineDash([3, 3]);
         ctx!.beginPath();
@@ -145,8 +146,8 @@ export default function ImprovementChart({ data }: { data: DataPoint[] }) {
         const tipW = 130, tipH = active.length * 16 + 24;
         const tipX = Math.min(x + 8, w - tipW - pad.right);
         const tipY = pad.top;
-        ctx!.fillStyle = '#0d0d18ee';
-        ctx!.strokeStyle = '#1a1a2e';
+        ctx!.fillStyle = t.panel + 'ee';
+        ctx!.strokeStyle = t.borderStrong;
         ctx!.lineWidth = 1;
         ctx!.beginPath();
         ctx!.roundRect(tipX, tipY, tipW, tipH, 4);
@@ -154,7 +155,7 @@ export default function ImprovementChart({ data }: { data: DataPoint[] }) {
         ctx!.stroke();
 
         ctx!.font = 'bold 9px system-ui';
-        ctx!.fillStyle = '#555';
+        ctx!.fillStyle = t.textMuted;
         ctx!.textAlign = 'left';
         ctx!.fillText(d.date, tipX + 8, tipY + 13);
 
