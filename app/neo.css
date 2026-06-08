@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --neo-bg: #08090d;
+  --neo-surface: #0f1117;
+  --neo-border: #1e2130;
+  --neo-primary: #6366f1;
+  --neo-secondary: #22d3ee;
+  --neo-success: #10b981;
+  --neo-warning: #f59e0b;
+  --neo-error: #ef4444;
+  --neo-text: #f1f5f9;
+  --neo-muted: #94a3b8;
+  --neo-faint: #475569;
+}
+
+[data-theme="neon"] {
+  --neo-bg: #0a0014;
+  --neo-surface: #15052b;
+  --neo-border: #2d0a4f;
+  --neo-primary: #f0abfc;
+  --neo-secondary: #22d3ee;
+}
+[data-theme="ocean"] {
+  --neo-bg: #04111f;
+  --neo-surface: #08203a;
+  --neo-border: #0e3357;
+  --neo-primary: #38bdf8;
+  --neo-secondary: #2dd4bf;
+}
+[data-theme="aurora"] {
+  --neo-bg: #051018;
+  --neo-surface: #0a1f1f;
+  --neo-border: #14403a;
+  --neo-primary: #34d399;
+  --neo-secondary: #c084fc;
+}
+[data-theme="ember"] {
+  --neo-bg: #110805;
+  --neo-surface: #1f0e08;
+  --neo-border: #3d1b10;
+  --neo-primary: #fb923c;
+  --neo-secondary: #f43f5e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--neo-bg);
+  color: var(--neo-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--neo-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neo-faint); }
+
+.neo-glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--neo-border);
+}
+
+.neo-gradient-border { position: relative; }
+.neo-gradient-border::before {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--neo-primary), transparent);
+  opacity: 0.5;
+}
+
+@keyframes neo-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.neo-pulse-dot::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: neo-pulse 2s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+@keyframes neo-ticker-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.neo-ticker-entry { animation: neo-ticker-in 0.35s ease-out; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.neo-spin { animation: spin 1s linear infinite; }
