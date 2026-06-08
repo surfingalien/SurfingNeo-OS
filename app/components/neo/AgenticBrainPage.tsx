@@ -82,7 +82,7 @@ function CardHeader({ icon, title, sub }: { icon: string; title: string; sub: st
 
 export function AgenticBrainPage() {
   return (
-    <div style={{ padding: '28px 32px' }}>
+    <div className="neo-page-padding">
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
         <div>
@@ -103,7 +103,7 @@ export function AgenticBrainPage() {
       </div>
 
       {/* 3-column cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+      <div className="neo-brain-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
         {/* Reasoning Engine */}
         <Card delay={0}>
           <CardHeader icon="🧠" title="Reasoning Engine" sub="System-2 Thinking" />
@@ -160,7 +160,7 @@ export function AgenticBrainPage() {
           <code style={{ fontSize: '11px', color: 'var(--neo-muted)', fontFamily: 'monospace' }}>claude-sonnet-4-6 + Graphify Context</code>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="neo-brain-steps" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {BRAIN_STEPS.map((step, i) => (
             <>
               <div

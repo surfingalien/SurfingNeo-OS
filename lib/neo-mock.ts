@@ -159,8 +159,10 @@ export const skills = [
   { id: 'agent-research', name: 'Agent Research', endpoint: '/api/agents/research', description: '5-agent parallel research orchestrator', tags: ['orchestration', 'parallel', 'research'], status: 'active', source: 'finsurfing', runs: 567 },
   { id: 'backtest-engine', name: 'Backtest Engine', endpoint: '/api/backtest', description: '4 strategies × 3 date ranges, sequential queue', tags: ['backtest', 'strategy', 'queue'], status: 'active', source: 'finsurfing', runs: 389 },
   { id: 'alert-ai-trigger', name: 'Alert → AI Trigger', endpoint: '/api/alerts/trigger', description: 'Price alert → AI analysis pipeline automation', tags: ['alerts', 'automation', 'trigger'], status: 'active', source: 'finsurfing', runs: 178 },
-  { id: 'scout-discovery', name: 'Scout Discovery', endpoint: '/api/scout', description: 'Generate new skills + agents from topic using Claude', tags: ['generation', 'scaffold', 'claude'], status: 'active', source: 'prompt-eng', runs: 870 },
-  { id: 'prompt-chat', name: 'Prompt Chat', endpoint: '/api/chat', description: 'Server-side Claude proxy — keeps API keys secure', tags: ['chat', 'proxy', 'anthropic'], status: 'active', source: 'prompt-eng', runs: 2140 },
+  { id: 'scout-discovery', name: 'Scout Discovery', endpoint: '/api/scout', description: 'Autonomous skill/agent generation for any topic using Claude', tags: ['generation', 'scaffold', 'claude'], status: 'active', source: 'prompt-eng', runs: 870 },
+  { id: 'prompt-chat', name: 'Prompt Chat', endpoint: '/api/chat', description: 'Server-side Claude proxy — API keys never exposed to client', tags: ['chat', 'proxy', 'anthropic'], status: 'active', source: 'prompt-eng', runs: 2140 },
+  { id: 'council', name: 'Council Engine', endpoint: '/api/council', description: '5-advisor AI decision engine — contrarian + first-principles perspectives', tags: ['council', 'decision', 'contrarian'], status: 'active', source: 'prompt-eng', runs: 634 },
+  { id: 'optimizer', name: 'Prompt Optimizer', endpoint: '/api/optimize', description: '6 modes: Clarity, CoT, Few-Shot, Concise, XML Structured, System Prompt', tags: ['optimize', 'prompts', 'cot'], status: 'active', source: 'prompt-eng', runs: 1290 },
 ];
 
 // Plugins

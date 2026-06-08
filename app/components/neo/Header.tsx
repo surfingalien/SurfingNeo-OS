@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { RefreshCw, Activity } from 'lucide-react';
+import { RefreshCw, Activity, Menu } from 'lucide-react';
 import { THEMES, type Theme } from '@/lib/neo-mock';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,8 +17,8 @@ function StatusPill({ name, ok }: { name: string; ok: boolean }) {
   );
 }
 
-export function Header({ theme, setTheme, onRefresh, refreshing, lastUpdated }: {
-  theme: Theme; setTheme: (t: Theme) => void; onRefresh: () => void; refreshing: boolean; lastUpdated: Date;
+export function Header({ theme, setTheme, onRefresh, refreshing, lastUpdated, onMenuOpen }: {
+  theme: Theme; setTheme: (t: Theme) => void; onRefresh: () => void; refreshing: boolean; lastUpdated: Date; onMenuOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
@@ -30,6 +30,11 @@ export function Header({ theme, setTheme, onRefresh, refreshing, lastUpdated }: 
     <header className="sticky top-0 z-40 h-14 neo-gradient-border backdrop-blur-md border-b" style={{ background: 'rgba(8,9,13,0.85)', borderColor: 'var(--neo-border)' }}>
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
+          {onMenuOpen && (
+            <button onClick={onMenuOpen} className="sidebar-mobile-btn md:hidden w-8 h-8 flex items-center justify-center rounded-md border" style={{ borderColor: 'var(--neo-border)', color: 'var(--neo-muted)', background: 'none', cursor: 'pointer' }}>
+              <Menu className="w-4 h-4" />
+            </button>
+          )}
           <div className="relative w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--neo-primary), var(--neo-secondary))' }}>
             <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
             <span className="absolute -inset-1 rounded-lg opacity-30 blur animate-pulse" style={{ background: 'var(--neo-primary)' }} />

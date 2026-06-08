@@ -4,7 +4,7 @@ import { plugins } from '@/lib/neo-mock';
 
 export function PluginsPage() {
   return (
-    <div style={{ padding: '28px 32px' }}>
+    <div className="neo-page-padding">
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
         <div>
@@ -18,7 +18,7 @@ export function PluginsPage() {
       </div>
 
       {/* Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+      <div className="neo-brain-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
         {plugins.map((plugin, i) => (
           <motion.div
             key={plugin.id}

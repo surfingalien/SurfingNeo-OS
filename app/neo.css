@@ -93,3 +93,57 @@ body {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 .neo-spin { animation: spin 1s linear infinite; }
+
+/* ── Responsive layout helpers ── */
+.neo-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+}
+.neo-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.neo-page-padding {
+  padding: 28px 32px;
+}
+/* Desktop: show sidebar, hide mobile btn */
+.sidebar-desktop { display: flex; }
+.sidebar-mobile-btn { display: none !important; }
+
+@media (max-width: 1024px) {
+  .neo-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 768px) {
+  /* Hide desktop sidebar, show hamburger */
+  .sidebar-desktop { display: none !important; }
+  .sidebar-mobile-btn { display: flex !important; }
+  .sidebar-collapse-btn { display: none !important; }
+
+  .neo-page-padding {
+    padding: 16px;
+  }
+  .neo-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .neo-dashboard-grid {
+    grid-template-columns: 1fr;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  /* AgenticBrain 3-col → 1-col */
+  .neo-brain-grid {
+    grid-template-columns: 1fr !important;
+  }
+  /* Brain architecture steps → wrap */
+  .neo-brain-steps {
+    flex-wrap: wrap;
+    gap: 8px !important;
+  }
+  .neo-brain-steps > div { flex: unset !important; width: calc(50% - 12px); }
+}
+@media (max-width: 480px) {
+  .neo-brain-steps > div { width: 100%; }
+}

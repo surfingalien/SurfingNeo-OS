@@ -17,7 +17,7 @@ import { PluginsPage } from './PluginsPage';
 import { AgenticBrainPage } from './AgenticBrainPage';
 import { type Theme, type GraphNode } from '@/lib/neo-mock';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Brain, Radio, Cpu } from 'lucide-react';
+import { Zap, Brain, Radio, Cpu, Menu } from 'lucide-react';
 
 type Tab = 'topology' | 'platforms' | 'trajectory';
 type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain';
@@ -28,7 +28,7 @@ const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: 'trajectory', label: 'Trajectory', emoji: '📈' },
 ];
 
-function DashboardContent({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
+function DashboardContent({ theme, setTheme, onMenuOpen }: { theme: Theme; setTheme: (t: Theme) => void; onMenuOpen: () => void }) {
   const [tab, setTab] = useState<Tab>('topology');
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,8 +43,8 @@ function DashboardContent({ theme, setTheme }: { theme: Theme; setTheme: (t: The
 
   return (
     <>
-      <Header theme={theme} setTheme={setTheme} onRefresh={refresh} refreshing={refreshing} lastUpdated={lastUpdated} />
-      <main className="px-6 py-5 grid gap-5" style={{ gridTemplateColumns: '1fr 380px' }}>
+      <Header theme={theme} setTheme={setTheme} onRefresh={refresh} refreshing={refreshing} lastUpdated={lastUpdated} onMenuOpen={onMenuOpen} />
+      <main className="neo-dashboard-grid px-4 md:px-6 py-5 gap-5">
         {/* Left column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
           <Panel>
@@ -96,13 +96,13 @@ function DashboardContent({ theme, setTheme }: { theme: Theme; setTheme: (t: The
   );
 }
 
-function GraphifyView() {
+function GraphifyView({ onMenuOpen }: { onMenuOpen: () => void }) {
   const [tab, setTab] = useState<Tab>('topology');
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const handleSelect = useCallback((n: GraphNode | null) => setSelected(n), []);
 
   return (
-    <div style={{ padding: '28px 32px' }}>
+    <div className="neo-page-padding">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--neo-text)', margin: 0 }}>Graphify</h1>
@@ -149,13 +149,19 @@ function GraphifyView() {
 export function Dashboard() {
   const [theme, setTheme] = useState<Theme>('neural');
   const [view, setView] = useState<View>('dashboard');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--neo-bg)' }}>
-      <Sidebar view={view} setView={setView} />
-      <div style={{ flex: 1, overflow: 'auto', color: 'var(--neo-text)' }}>
+      <Sidebar
+        view={view} setView={setView}
+        collapsed={sidebarCollapsed} setCollapsed={setSidebarCollapsed}
+        mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}
+      />
+      <div style={{ flex: 1, overflow: 'auto', color: 'var(--neo-text)', minWidth: 0 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={view}
@@ -164,8 +170,8 @@ export function Dashboard() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
           >
-            {view === 'dashboard' && <DashboardContent theme={theme} setTheme={setTheme} />}
-            {view === 'graphify' && <GraphifyView />}
+            {view === 'dashboard' && <DashboardContent theme={theme} setTheme={setTheme} onMenuOpen={() => setMobileOpen(true)} />}
+            {view === 'graphify' && <GraphifyView onMenuOpen={() => setMobileOpen(true)} />}
             {view === 'mcp' && <MCPServersPage />}
             {view === 'skills' && <SkillsPage />}
             {view === 'plugins' && <PluginsPage />}
