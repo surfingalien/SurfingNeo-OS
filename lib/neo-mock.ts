@@ -133,34 +133,34 @@ export function generateEvent() {
   };
 }
 
-// MCP Servers
+// MCP Servers — sourced from FinSurfing /api/agentic-os/mcps
 export const mcpServers = [
-  { id: 'claude', name: 'Claude claude-sonnet-4-6', protocol: 'HTTP/SSE', description: 'Primary AI reasoning + tool use', model: 'claude-sonnet-4-6', tools: 8, status: 'connected', color: '#6366f1' },
-  { id: 'groq', name: 'Groq LLaMA 3.3 70B', protocol: 'HTTP', description: 'Fallback fast inference', model: 'llama-3.3-70b', tools: 3, status: 'connected', color: '#10b981' },
-  { id: 'finnhub', name: 'Finnhub Market Data', protocol: 'HTTP', description: 'Real-time US equity data', model: 'quote/chart/search', tools: 5, status: 'connected', color: '#f59e0b' },
-  { id: 'fmp', name: 'FMP Financial Data', protocol: 'HTTP', description: 'Fundamentals + analyst ratings', model: 'analyst/earnings', tools: 4, status: 'connected', color: '#22d3ee' },
-  { id: 'fred', name: 'FRED Macro Data', protocol: 'HTTP', description: 'Rates, inflation, VIX, GDP', model: 'series/observations', tools: 4, status: 'connected', color: '#a78bfa' },
-  { id: 'edgar', name: 'SEC EDGAR', protocol: 'HTTP', description: 'Insider transactions (free)', model: 'company/filings', tools: 3, status: 'connected', color: '#f97316' },
-  { id: 'alpaca', name: 'Alpaca Trading', protocol: 'HTTP/WS', description: 'Paper + live order execution', model: 'orders/positions', tools: 6, status: 'connected', color: '#ec4899' },
-  { id: 'reddit', name: 'Reddit Sentiment', protocol: 'HTTP', description: 'WSB + investing subreddits', model: 'hot/new/sentiment', tools: 2, status: 'connected', color: '#ff4500' },
-  { id: 'newsapi', name: 'NewsAPI', protocol: 'HTTP', description: 'Financial news aggregation', model: 'everything/headlines', tools: 2, status: 'degraded', color: '#94a3b8' },
-  { id: 'openbb', name: 'OpenBB Platform', protocol: 'HTTP', description: 'Multi-source terminal data', model: 'equity/options', tools: 7, status: 'disconnected', color: '#475569' },
+  { id: 'claude', name: 'Claude Sonnet 4.6', protocol: 'HTTP/SSE', description: 'Primary AI reasoning engine (8 tools)', model: 'claude-sonnet-4-6', tools: 8, status: 'connected', color: '#6366f1' },
+  { id: 'groq', name: 'Groq LLaMA 3.3 70B', protocol: 'HTTP', description: 'Fallback fast inference (3 tools)', model: 'llama-3.3-70b', tools: 3, status: 'conditional', color: '#10b981' },
+  { id: 'finnhub', name: 'Finnhub Market Data', protocol: 'HTTP/WS', description: 'Real-time equity data + WS stream (5 tools)', model: 'quote/chart/search', tools: 5, status: 'conditional', color: '#f59e0b' },
+  { id: 'fmp', name: 'FMP Financial Data', protocol: 'HTTP', description: 'Fundamentals + analyst ratings (4 tools)', model: 'analyst/earnings', tools: 4, status: 'conditional', color: '#22d3ee' },
+  { id: 'fred', name: 'FRED Macro Data', protocol: 'HTTP', description: '14 macro series — rates, inflation, VIX, GDP', model: 'series/observations', tools: 14, status: 'conditional', color: '#a78bfa' },
+  { id: 'edgar', name: 'SEC EDGAR', protocol: 'HTTP', description: 'Insider transactions — Form 4 filings (2 tools)', model: 'company/filings', tools: 2, status: 'connected', color: '#f97316' },
+  { id: 'finra', name: 'FINRA Short Interest', protocol: 'HTTP', description: 'Short interest data by symbol (1 tool)', model: 'short-interest', tools: 1, status: 'connected', color: '#ec4899' },
+  { id: 'reddit', name: 'Reddit Social Sentiment', protocol: 'HTTP', description: 'WSB + investing subreddits (2 tools)', model: 'hot/new/sentiment', tools: 2, status: 'connected', color: '#ff4500' },
+  { id: 'binance', name: 'Binance WebSocket', protocol: 'WS', description: 'Crypto 24hr ticker stream (1 tool)', model: '24hrTicker', tools: 1, status: 'connected', color: '#f0b90b' },
+  { id: 'postgres', name: 'PostgreSQL', protocol: 'TCP', description: 'Portfolio + auth database (6 tools)', model: 'pg', tools: 6, status: 'conditional', color: '#336791' },
 ];
 
-// Skills
+// Skills — sourced from FinSurfing /api/agentic-os/skills + prompt-engineering /api/scout
 export const skills = [
-  { id: 'market-scanner', name: 'Market Scanner', endpoint: '/api/ai-brain/analyze', description: 'AI Brain 5-agent scan across 30+ universes', tags: ['ai', 'scan', 'multi-agent'], status: 'active', source: 'finsurfing', runs: 1240 },
-  { id: 'symbol-analyzer', name: 'Symbol Analyzer', endpoint: '/api/trading-analysis', description: 'Deep technical + AI signal for any ticker', tags: ['ai', 'technical', 'signals'], status: 'active', source: 'finsurfing', runs: 892 },
-  { id: 'advisory-engine', name: 'Advisory Engine', endpoint: '/api/recommendations', description: '10 investor personas × buy signals', tags: ['ai', 'personas', 'advisory'], status: 'active', source: 'finsurfing', runs: 634 },
+  { id: 'market-scanner', name: 'Market Scanner', endpoint: '/api/ai-brain/analyze', description: '5-agent scan across 30+ universes (stocks, ETFs, crypto)', tags: ['ai', 'scan', 'multi-agent'], status: 'active', source: 'finsurfing', runs: 1240 },
+  { id: 'symbol-analyzer', name: 'Symbol Analyzer', endpoint: '/api/trading-analysis/analyze', description: 'Technical + AI signal analysis for any ticker', tags: ['ai', 'technical', 'signals'], status: 'active', source: 'finsurfing', runs: 892 },
+  { id: 'advisory-engine', name: 'Advisory Engine', endpoint: '/api/recommendations', description: '10 investor personas × buy signals with conflict surfacing', tags: ['ai', 'personas', 'advisory'], status: 'active', source: 'finsurfing', runs: 634 },
   { id: 'social-sentiment', name: 'Social Sentiment', endpoint: '/api/market-intel', description: 'Real-time Reddit/WSB sentiment scoring', tags: ['alt-data', 'reddit', 'wsb'], status: 'active', source: 'finsurfing', runs: 445 },
-  { id: 'risk-scorer', name: 'Risk Scorer', endpoint: '/api/risk/score', description: 'VaR + portfolio concentration risk', tags: ['risk', 'portfolio'], status: 'active', source: 'finsurfing', runs: 318 },
-  { id: 'earnings-tracker', name: 'Earnings Tracker', endpoint: '/api/earnings', description: 'Pre/post earnings drift detection', tags: ['earnings', 'catalyst'], status: 'active', source: 'finsurfing', runs: 221 },
-  { id: 'prompt-optimizer', name: 'Prompt Optimizer', endpoint: '/api/prompt/optimize', description: 'Token-efficient prompt rewriting', tags: ['llm', 'tokens', 'optimization'], status: 'active', source: 'prompt-eng', runs: 870 },
-  { id: 'chain-executor', name: 'Chain Executor', endpoint: '/api/chain/execute', description: 'Multi-step LLM pipeline runner', tags: ['chain', 'pipeline', 'llm'], status: 'active', source: 'prompt-eng', runs: 680 },
-  { id: 'template-engine', name: 'Template Engine', endpoint: '/api/template/render', description: 'Dynamic prompt template library', tags: ['templates', 'render'], status: 'active', source: 'prompt-eng', runs: 1540 },
-  { id: 'eval-runner', name: 'Eval Runner', endpoint: '/api/eval/run', description: 'LLM output quality benchmarking', tags: ['eval', 'benchmark', 'quality'], status: 'inactive', source: 'prompt-eng', runs: 480 },
-  { id: 'context-compressor', name: 'Context Compressor', endpoint: '/api/context/compress', description: 'Intelligent context window management', tags: ['context', 'compression'], status: 'active', source: 'prompt-eng', runs: 290 },
-  { id: 'rag-pipeline', name: 'RAG Pipeline', endpoint: '/api/rag/query', description: 'Retrieval-augmented generation with Graphify', tags: ['rag', 'retrieval', 'graphify'], status: 'active', source: 'prompt-eng', runs: 567 },
+  { id: 'macro-pulse', name: 'Macro Pulse', endpoint: '/api/macro/summary', description: '14 FRED series + regime assessment', tags: ['macro', 'fred', 'regime'], status: 'active', source: 'finsurfing', runs: 312 },
+  { id: 'alt-data', name: 'Alt Data', endpoint: '/api/market-intel/alt', description: 'SEC Form 4 insider + FINRA short interest signals', tags: ['alt-data', 'edgar', 'finra'], status: 'active', source: 'finsurfing', runs: 221 },
+  { id: 'marketpulse-copilot', name: 'MarketPulse Copilot', endpoint: '/api/copilot/chat', description: 'Agentic SSE chat — Claude + Groq + Codex', tags: ['chat', 'sse', 'copilot'], status: 'active', source: 'finsurfing', runs: 1840 },
+  { id: 'agent-research', name: 'Agent Research', endpoint: '/api/agents/research', description: '5-agent parallel research orchestrator', tags: ['orchestration', 'parallel', 'research'], status: 'active', source: 'finsurfing', runs: 567 },
+  { id: 'backtest-engine', name: 'Backtest Engine', endpoint: '/api/backtest', description: '4 strategies × 3 date ranges, sequential queue', tags: ['backtest', 'strategy', 'queue'], status: 'active', source: 'finsurfing', runs: 389 },
+  { id: 'alert-ai-trigger', name: 'Alert → AI Trigger', endpoint: '/api/alerts/trigger', description: 'Price alert → AI analysis pipeline automation', tags: ['alerts', 'automation', 'trigger'], status: 'active', source: 'finsurfing', runs: 178 },
+  { id: 'scout-discovery', name: 'Scout Discovery', endpoint: '/api/scout', description: 'Generate new skills + agents from topic using Claude', tags: ['generation', 'scaffold', 'claude'], status: 'active', source: 'prompt-eng', runs: 870 },
+  { id: 'prompt-chat', name: 'Prompt Chat', endpoint: '/api/chat', description: 'Server-side Claude proxy — keeps API keys secure', tags: ['chat', 'proxy', 'anthropic'], status: 'active', source: 'prompt-eng', runs: 2140 },
 ];
 
 // Plugins
@@ -172,9 +172,12 @@ export const plugins = [
   { id: 'vision-extract', name: 'Vision Extract', subtitle: 'Image to code', description: 'Convert screenshots and mockups into working code. Figma to React component.', version: 'v0.9.3', tag: 'Vision', status: 'update', icon: '👁️', color: '#a78bfa' },
 ];
 
-// Agents
+// Agents — 5-agent architecture from FinSurfing /api/ai-brain + Supervisor
 export const agents = [
-  { id: 'coder', name: 'Coder Agent', description: 'Implementing features', status: 'active', icon: '</>' },
-  { id: 'research', name: 'Research Agent', description: 'Searching Graphify docs', status: 'active', icon: '🔍' },
-  { id: 'review', name: 'Review Agent', description: 'Idle — awaiting PR', status: 'idle', icon: '✔' },
+  { id: 'fundamental', name: 'Fundamental Analyst', description: 'Earnings, valuations, balance sheet quality', status: 'active', icon: '📊' },
+  { id: 'technical', name: 'Technical Analyst', description: 'Price trends, momentum, support/resistance', status: 'active', icon: '📈' },
+  { id: 'sentiment', name: 'Sentiment Agent', description: 'News flow, positioning, social dominance', status: 'active', icon: '💬' },
+  { id: 'macro', name: 'Macro Economist', description: 'Sector tailwinds + regime fit (14 FRED series)', status: 'active', icon: '🌐' },
+  { id: 'risk', name: 'Risk Manager', description: 'Downside scenarios + concentration exposure', status: 'active', icon: '🛡️' },
+  { id: 'supervisor', name: 'Supervisor', description: 'Contradiction engine — surfaces agent conflicts ≥25pt', status: 'active', icon: '🧠' },
 ];

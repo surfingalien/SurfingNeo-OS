@@ -3,29 +3,32 @@ import { motion } from 'framer-motion';
 import { agents } from '@/lib/neo-mock';
 
 const reasoningCapabilities = [
-  { label: 'Chain-of-Thought', value: 'Enabled', color: '#3b82f6', pct: 100 },
-  { label: 'Self-Reflection', value: 'Enabled', color: '#3b82f6', pct: 100 },
-  { label: 'Tool Learning', value: 'Active', color: '#a78bfa', pct: 75 },
+  { label: 'Multi-Agent Parallelism', value: '5 Agents', color: '#6366f1', pct: 100 },
+  { label: 'Conflict Surfacing (≥25pt)', value: 'Active', color: '#22d3ee', pct: 100 },
+  { label: 'Scan Universe Coverage', value: '30+ Pools', color: '#10b981', pct: 92 },
 ];
 
 const memoryMetrics = [
-  { label: 'Graph Memory', value: '127 nodes', color: '#3b82f6', pct: 85 },
-  { label: 'Conversation History', value: '847 turns', color: '#a78bfa', pct: 70 },
-  { label: 'Skill Cache', value: '11 loaded', color: '#10b981', pct: 45 },
+  { label: 'Prediction Log (JSONL)', value: '2,847 entries', color: '#6366f1', pct: 85 },
+  { label: 'Win-Rate Tracking', value: '1d / 7d / 30d', color: '#a78bfa', pct: 70 },
+  { label: 'Skill Cache', value: '12 loaded', color: '#10b981', pct: 50 },
 ];
 
 const AGENT_ICON_COLORS: Record<string, string> = {
-  coder: '#6366f1',
-  research: '#22d3ee',
-  review: '#94a3b8',
+  fundamental: '#10b981',
+  technical: '#6366f1',
+  sentiment: '#f59e0b',
+  macro: '#22d3ee',
+  risk: '#ef4444',
+  supervisor: '#a78bfa',
 };
 
 const BRAIN_STEPS = [
-  { icon: '💬', name: 'User Input', sub: 'Natural language', color: '#6366f1' },
-  { icon: '🔀', name: 'Skill Router', sub: 'Pattern matching', color: '#22d3ee' },
-  { icon: '🧠', name: 'LLM Reasoning', sub: 'claude-sonnet-4-6', color: '#a78bfa' },
-  { icon: '🗄️', name: 'Graph Context', sub: 'Graphify 71.5×', color: '#10b981' },
-  { icon: '✅', name: 'Action Output', sub: 'Code, data, plans', color: '#f59e0b' },
+  { icon: '📥', name: 'Signal Input', sub: 'Ticker + universe', color: '#6366f1' },
+  { icon: '🤝', name: '5-Agent Parallel', sub: 'Fund / Tech / Sent / Macro / Risk', color: '#22d3ee' },
+  { icon: '⚡', name: 'Conflict Engine', sub: 'Spread ≥25pt → primary signal', color: '#a78bfa' },
+  { icon: '🧠', name: 'Supervisor Synthesis', sub: 'claude-sonnet-4-6', color: '#10b981' },
+  { icon: '✅', name: 'Verdict + Zones', sub: 'Entry / Target / Stop', color: '#f59e0b' },
 ];
 
 function ProgressRow({ label, value, color, pct }: { label: string; value: string; color: string; pct: number }) {
