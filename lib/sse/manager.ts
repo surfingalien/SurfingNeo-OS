@@ -27,9 +27,9 @@ class SSEManager {
   broadcastToProject(projectId: string, data: unknown) {
     const clientIds = this.projectClients.get(projectId);
     if (!clientIds) return;
-    const msg = `data: ${JSON.stringify({ ...data, timestamp: new Date().toISOString() })}\n\n`;
+    const msg = `data: ${JSON.stringify(Object.assign({}, data as object, { timestamp: new Date().toISOString() }))}\n\n`;
     const encoded = new TextEncoder().encode(msg);
-    for (const id of clientIds) {
+    for (const id of Array.from(clientIds)) {
       const client = this.clients.get(id);
       if (client) { try { client.controller.enqueue(encoded); } catch { this.removeClient(id); } }
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/middleware';
-import { graphifyBreaker } from '@/lib/resilience/circuit-breaker';
+import { graphifyBreaker, mcpBreaker } from '@/lib/resilience/circuit-breaker';
 import { withRetry } from '@/lib/resilience/retry';
 import { API_CONFIG } from '@/lib/api-config';
 

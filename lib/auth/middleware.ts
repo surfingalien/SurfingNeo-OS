@@ -56,7 +56,7 @@ function timingSafeCompare(a: string, b: string): boolean {
 }
 
 export function withAuth(
-  handler: (req: NextRequest, auth: AuthContext) => Promise<NextResponse>,
+  handler: (req: NextRequest, auth: AuthContext) => Promise<NextResponse | Response>,
   requiredRole?: AuthContext['role']
 ) {
   return async (req: NextRequest) => {

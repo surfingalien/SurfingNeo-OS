@@ -1,30 +1,92 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-interface GraphData {
-  nodes: Array<{
-    id: string;
-    label: string;
-    type: string;
-    status: string;
-    edges: number;
-    size: number;
-  }>;
-  links: Array<{
-    source: string;
-    target: string;
-    strength: number;
-    type: string;
-    traffic: number;
-  }>;
+interface Node {
+  id: string;
+  label: string;
+  type: string;
+  status: string;
+  edges: number;
+  size: number;
 }
 
-export default function ForceGraph({ data }: { data: GraphData }) {
+interface Link {
+  source: string;
+  target: string;
+  strength: number;
+  type: string;
+  traffic: number;
+}
+
+interface GraphData {
+  nodes: Node[];
+  links: Link[];
+  source?: string;
+  warning?: string;
+}
+
+interface SimNode extends Node {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  color: string;
+  pulsePhase: number;
+}
+
+interface SimLink extends Link {
+  sourceNode: SimNode;
+  targetNode: SimNode;
+  particleOffset: number;
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  brain: '#00ff88',
+  engine: '#00ccff',
+  interface: '#ffaa00',
+  infrastructure: '#cc88ff',
+  source: '#ff6688',
+  storage: '#88ccff',
+  platform: '#ff9944',
+};
+
+const TYPE_ICONS: Record<string, string> = {
+  brain: '🧠', engine: '⚙️', interface: '🔌', infrastructure: '🏗️', source: '📡', storage: '💾', platform: '🌊',
+};
+
+export default function ForceGraph({ data, onNodeClick }: { data: GraphData; onNodeClick?: (node: Node | null) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>(0);
-  const nodesRef = useRef<any[]>([]);
-  const linksRef = useRef<any[]>([]);
+  const animRef = useRef<number>(0);
+  const nodesRef = useRef<SimNode[]>([]);
+  const linksRef = useRef<SimLink[]>([]);
+  const hoveredRef = useRef<SimNode | null>(null);
+  const selectedRef = useRef<SimNode | null>(null);
+  const offsetRef = useRef({ x: 0, y: 0, scale: 1 });
+  const dragRef = useRef<{ node: SimNode | null; panStart: { x: number; y: number } | null }>({ node: null, panStart: null });
+  const [sourceLabel, setSourceLabel] = useState<string>('');
+
+  useEffect(() => {
+    setSourceLabel(data.source || '');
+  }, [data]);
+
+  const toCanvas = useCallback((clientX: number, clientY: number, rect: DOMRect) => {
+    const { x, y, scale } = offsetRef.current;
+    return {
+      x: (clientX - rect.left - x) / scale,
+      y: (clientY - rect.top - y) / scale,
+    };
+  }, []);
+
+  const hitTest = useCallback((cx: number, cy: number): SimNode | null => {
+    for (const node of [...nodesRef.current].reverse()) {
+      const dx = cx - node.x;
+      const dy = cy - node.y;
+      if (Math.sqrt(dx * dx + dy * dy) <= node.radius + 6) return node;
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,36 +95,32 @@ export default function ForceGraph({ data }: { data: GraphData }) {
     if (!ctx) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
 
-    const width = rect.width;
-    const height = rect.height;
+    function resize() {
+      const rect = canvas!.getBoundingClientRect();
+      canvas!.width = rect.width * dpr;
+      canvas!.height = rect.height * dpr;
+      ctx!.scale(dpr, dpr);
+    }
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
 
-    // Initialize node positions
-    const typeColors: Record<string, string> = {
-      brain: '#00ff88',
-      engine: '#00ccff',
-      interface: '#ffaa00',
-      infrastructure: '#cc88ff',
-      source: '#ff6688',
-      storage: '#88ccff',
-    };
+    const width = () => canvas!.getBoundingClientRect().width;
+    const height = () => canvas!.getBoundingClientRect().height;
 
-    const nodeMap = new Map();
+    const nodeMap = new Map<string, SimNode>();
     nodesRef.current = data.nodes.map((n, i) => {
       const angle = (i / data.nodes.length) * Math.PI * 2;
-      const radius = Math.min(width, height) * 0.35;
-      const node = {
+      const radius = Math.min(width(), height()) * 0.3;
+      const node: SimNode = {
         ...n,
-        x: width / 2 + Math.cos(angle) * radius,
-        y: height / 2 + Math.sin(angle) * radius,
-        vx: 0,
-        vy: 0,
-        radius: 8 + Math.sqrt(n.size) / 8,
-        color: typeColors[n.type] || '#888',
+        x: width() / 2 + Math.cos(angle) * radius,
+        y: height() / 2 + Math.sin(angle) * radius,
+        vx: 0, vy: 0,
+        radius: 10 + Math.sqrt(n.size) / 7,
+        color: TYPE_COLORS[n.type] || '#888',
+        pulsePhase: Math.random() * Math.PI * 2,
       };
       nodeMap.set(n.id, node);
       return node;
@@ -70,136 +128,262 @@ export default function ForceGraph({ data }: { data: GraphData }) {
 
     linksRef.current = data.links.map(l => ({
       ...l,
-      sourceNode: nodeMap.get(l.source),
-      targetNode: nodeMap.get(l.target),
-    }));
+      sourceNode: nodeMap.get(l.source)!,
+      targetNode: nodeMap.get(l.target)!,
+      particleOffset: Math.random(),
+    })).filter(l => l.sourceNode && l.targetNode);
 
-    function animate() {
-      ctx.clearRect(0, 0, width, height);
+    let frame = 0;
 
-      // Physics simulation (simplified force-directed)
+    function draw() {
+      const w = width();
+      const h = height();
+      const { x: ox, y: oy, scale } = offsetRef.current;
+      const t = Date.now() / 1000;
+
+      ctx!.clearRect(0, 0, w * dpr, h * dpr);
+      ctx!.save();
+      ctx!.translate(ox, oy);
+      ctx!.scale(scale, scale);
+
       const nodes = nodesRef.current;
       const links = linksRef.current;
+      frame++;
 
-      // Repulsion
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx = nodes[j].x - nodes[i].x;
-          const dy = nodes[j].y - nodes[i].y;
+      // Physics (run every other frame for perf)
+      if (frame % 2 === 0) {
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[j].x - nodes[i].x;
+            const dy = nodes[j].y - nodes[i].y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const force = 3200 / (dist * dist);
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            nodes[i].vx -= fx; nodes[i].vy -= fy;
+            nodes[j].vx += fx; nodes[j].vy += fy;
+          }
+        }
+        for (const link of links) {
+          const dx = link.targetNode.x - link.sourceNode.x;
+          const dy = link.targetNode.y - link.sourceNode.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const force = 2000 / (dist * dist);
+          const ideal = 140;
+          const force = (dist - ideal) * 0.006 * link.strength;
           const fx = (dx / dist) * force;
           const fy = (dy / dist) * force;
-          nodes[i].vx -= fx;
-          nodes[i].vy -= fy;
-          nodes[j].vx += fx;
-          nodes[j].vy += fy;
+          link.sourceNode.vx += fx; link.sourceNode.vy += fy;
+          link.targetNode.vx -= fx; link.targetNode.vy -= fy;
         }
-      }
-
-      // Attraction (links)
-      for (const link of links) {
-        const dx = link.targetNode.x - link.sourceNode.x;
-        const dy = link.targetNode.y - link.sourceNode.y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        const force = (dist - 120) * 0.008 * link.strength;
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-        link.sourceNode.vx += fx;
-        link.sourceNode.vy += fy;
-        link.targetNode.vx -= fx;
-        link.targetNode.vy -= fy;
-      }
-
-      // Center gravity
-      for (const node of nodes) {
-        node.vx += (width / 2 - node.x) * 0.001;
-        node.vy += (height / 2 - node.y) * 0.001;
-        node.vx *= 0.92;
-        node.vy *= 0.92;
-        node.x += node.vx;
-        node.y += node.vy;
+        for (const node of nodes) {
+          if (dragRef.current.node === node) continue;
+          node.vx += (w / 2 - node.x) * 0.0008;
+          node.vy += (h / 2 - node.y) * 0.0008;
+          node.vx *= 0.88; node.vy *= 0.88;
+          node.x += node.vx; node.y += node.vy;
+        }
       }
 
       // Draw links
       for (const link of links) {
-        const sx = link.sourceNode.x;
-        const sy = link.sourceNode.y;
-        const tx = link.targetNode.x;
-        const ty = link.targetNode.y;
+        const sx = link.sourceNode.x, sy = link.sourceNode.y;
+        const tx = link.targetNode.x, ty = link.targetNode.y;
+        const isHovered = hoveredRef.current === link.sourceNode || hoveredRef.current === link.targetNode;
+        const isSelected = selectedRef.current === link.sourceNode || selectedRef.current === link.targetNode;
 
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(tx, ty);
-        ctx.strokeStyle = `rgba(0, 255, 136, ${link.strength * 0.4})`;
-        ctx.lineWidth = link.strength * 2;
-        ctx.stroke();
+        const alpha = isSelected ? 0.7 : isHovered ? 0.5 : link.strength * 0.3;
+        const lw = isSelected ? link.strength * 2.5 : link.strength * 1.5;
 
-        // Animated pulse on link
-        const midX = (sx + tx) / 2;
-        const midY = (sy + ty) / 2;
-        const pulse = (Date.now() / 1000) % 1;
-        const px = sx + (tx - sx) * pulse;
-        const py = sy + (ty - sy) * pulse;
-        ctx.beginPath();
-        ctx.arc(px, py, 2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 255, 136, ${0.8 * (1 - Math.abs(pulse - 0.5) * 2)})`;
-        ctx.fill();
+        // Gradient line
+        const grad = ctx!.createLinearGradient(sx, sy, tx, ty);
+        grad.addColorStop(0, `${link.sourceNode.color}${Math.round(alpha * 255).toString(16).padStart(2,'0')}`);
+        grad.addColorStop(1, `${link.targetNode.color}${Math.round(alpha * 255).toString(16).padStart(2,'0')}`);
+        ctx!.beginPath();
+        ctx!.moveTo(sx, sy);
+        ctx!.lineTo(tx, ty);
+        ctx!.strokeStyle = grad;
+        ctx!.lineWidth = lw;
+        ctx!.stroke();
+
+        // Animated traffic particles
+        const particleCount = Math.ceil(link.traffic / 600);
+        for (let p = 0; p < particleCount; p++) {
+          const phase = ((t * 0.3 + link.particleOffset + p / particleCount) % 1);
+          const px = sx + (tx - sx) * phase;
+          const py = sy + (ty - sy) * phase;
+          const pAlpha = 1 - Math.abs(phase - 0.5) * 2;
+          ctx!.beginPath();
+          ctx!.arc(px, py, 2.5, 0, Math.PI * 2);
+          ctx!.fillStyle = `${link.sourceNode.color}${Math.round(pAlpha * 200).toString(16).padStart(2,'0')}`;
+          ctx!.fill();
+        }
+
+        // Traffic label on hover
+        if ((isHovered || isSelected) && link.traffic > 0) {
+          const mx = (sx + tx) / 2, my = (sy + ty) / 2;
+          ctx!.font = '9px system-ui';
+          ctx!.fillStyle = '#888';
+          ctx!.textAlign = 'center';
+          ctx!.fillText(`${link.traffic}/hr`, mx, my - 6);
+        }
       }
 
       // Draw nodes
       for (const node of nodes) {
-        // Glow
-        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.radius * 3);
-        gradient.addColorStop(0, `${node.color}44`);
-        gradient.addColorStop(1, 'transparent');
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius * 3, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
+        const isHovered = hoveredRef.current === node;
+        const isSelected = selectedRef.current === node;
+        const pulse = Math.sin(t * 1.5 + node.pulsePhase) * 0.5 + 0.5;
+        const glowRadius = node.radius * (isSelected ? 4.5 : isHovered ? 3.5 : 2.5 + pulse * 0.5);
 
-        // Core
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = node.status === 'warning' ? '#ffaa00' : node.color;
-        ctx.fill();
+        // Outer glow
+        const glow = ctx!.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius);
+        const glowAlpha = isSelected ? '66' : isHovered ? '44' : '22';
+        glow.addColorStop(0, `${node.color}${glowAlpha}`);
+        glow.addColorStop(1, 'transparent');
+        ctx!.beginPath();
+        ctx!.arc(node.x, node.y, glowRadius, 0, Math.PI * 2);
+        ctx!.fillStyle = glow;
+        ctx!.fill();
 
-        // Border
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+        // Ring for selected
+        if (isSelected) {
+          ctx!.beginPath();
+          ctx!.arc(node.x, node.y, node.radius + 5, 0, Math.PI * 2);
+          ctx!.strokeStyle = node.color;
+          ctx!.lineWidth = 2;
+          ctx!.setLineDash([4, 4]);
+          ctx!.lineDashOffset = -t * 8;
+          ctx!.stroke();
+          ctx!.setLineDash([]);
+        }
+
+        // Core circle
+        const coreColor = node.status === 'warning' ? '#ffaa00' : node.status === 'error' ? '#ff0044' : node.color;
+        ctx!.beginPath();
+        ctx!.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        const core = ctx!.createRadialGradient(node.x - node.radius * 0.3, node.y - node.radius * 0.3, 0, node.x, node.y, node.radius);
+        core.addColorStop(0, `${coreColor}ff`);
+        core.addColorStop(1, `${coreColor}88`);
+        ctx!.fillStyle = core;
+        ctx!.fill();
+
+        ctx!.beginPath();
+        ctx!.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx!.strokeStyle = isSelected || isHovered ? '#fff' : '#ffffff44';
+        ctx!.lineWidth = isSelected ? 2 : 1;
+        ctx!.stroke();
 
         // Label
-        ctx.font = '11px system-ui, sans-serif';
-        ctx.fillStyle = '#ccc';
-        ctx.textAlign = 'center';
-        ctx.fillText(node.label, node.x, node.y + node.radius + 16);
+        ctx!.font = `${isSelected || isHovered ? 'bold ' : ''}11px system-ui`;
+        ctx!.fillStyle = isSelected || isHovered ? '#fff' : '#ccc';
+        ctx!.textAlign = 'center';
+        ctx!.fillText(node.label, node.x, node.y + node.radius + 14);
 
-        // Type badge
-        ctx.font = '9px system-ui, sans-serif';
-        ctx.fillStyle = '#666';
-        ctx.fillText(node.type, node.x, node.y + node.radius + 28);
+        ctx!.font = '9px system-ui';
+        ctx!.fillStyle = TYPE_COLORS[node.type] || '#666';
+        ctx!.fillText(`${TYPE_ICONS[node.type] || '•'} ${node.type}`, node.x, node.y + node.radius + 26);
 
-        // Size indicator
-        ctx.font = '9px system-ui, sans-serif';
-        ctx.fillStyle = '#444';
-        ctx.fillText(`${node.size} nodes`, node.x, node.y + node.radius + 40);
+        if (isSelected || isHovered) {
+          ctx!.font = '9px system-ui';
+          ctx!.fillStyle = '#555';
+          ctx!.fillText(`${node.edges} links · ${node.size.toLocaleString()}`, node.x, node.y + node.radius + 38);
+        }
       }
 
-      animationRef.current = requestAnimationFrame(animate);
+      ctx!.restore();
+      animRef.current = requestAnimationFrame(draw);
     }
 
-    animate();
+    draw();
 
-    return () => cancelAnimationFrame(animationRef.current);
-  }, [data]);
+    // Mouse events
+    function getPos(e: MouseEvent) {
+      return toCanvas(e.clientX, e.clientY, canvas!.getBoundingClientRect());
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      const pos = getPos(e);
+      if (dragRef.current.node) {
+        dragRef.current.node.x = pos.x;
+        dragRef.current.node.y = pos.y;
+        dragRef.current.node.vx = 0;
+        dragRef.current.node.vy = 0;
+        return;
+      }
+      if (dragRef.current.panStart) {
+        offsetRef.current.x += e.movementX;
+        offsetRef.current.y += e.movementY;
+        return;
+      }
+      hoveredRef.current = hitTest(pos.x, pos.y);
+      canvas!.style.cursor = hoveredRef.current ? 'pointer' : 'grab';
+    }
+
+    function onMouseDown(e: MouseEvent) {
+      const pos = getPos(e);
+      const hit = hitTest(pos.x, pos.y);
+      if (hit) { dragRef.current.node = hit; }
+      else { dragRef.current.panStart = { x: e.clientX, y: e.clientY }; canvas!.style.cursor = 'grabbing'; }
+    }
+
+    function onMouseUp(e: MouseEvent) {
+      if (dragRef.current.node) {
+        const pos = getPos(e);
+        const still = Math.abs(pos.x - dragRef.current.node.x) < 5 && Math.abs(pos.y - dragRef.current.node.y) < 5;
+        if (still) {
+          selectedRef.current = selectedRef.current === dragRef.current.node ? null : dragRef.current.node;
+          onNodeClick?.(selectedRef.current);
+        }
+      }
+      dragRef.current.node = null;
+      dragRef.current.panStart = null;
+      canvas!.style.cursor = 'grab';
+    }
+
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      const rect = canvas!.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      offsetRef.current.scale *= factor;
+      offsetRef.current.x = mx - (mx - offsetRef.current.x) * factor;
+      offsetRef.current.y = my - (my - offsetRef.current.y) * factor;
+    }
+
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('wheel', onWheel, { passive: false });
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      ro.disconnect();
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('wheel', onWheel);
+    };
+  }, [data, toCanvas, hitTest, onNodeClick]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{ width: '100%', height: '420px', borderRadius: '8px', cursor: 'grab' }}
-    />
+    <div style={{ position: 'relative' }}>
+      <canvas ref={canvasRef} style={{ width: '100%', height: '460px', borderRadius: '8px', cursor: 'grab', display: 'block' }} />
+      <div style={{ position: 'absolute', bottom: '10px', left: '12px', fontSize: '10px', color: '#333', display: 'flex', gap: '12px', alignItems: 'center' }}>
+        {Object.entries(TYPE_COLORS).map(([type, color]) => (
+          <span key={type} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
+            <span style={{ color: '#444' }}>{type}</span>
+          </span>
+        ))}
+      </div>
+      {sourceLabel && (
+        <div style={{ position: 'absolute', top: '10px', right: '12px', fontSize: '10px', padding: '3px 8px', borderRadius: '10px', background: sourceLabel.includes('graphify-live') ? '#00ff8822' : '#ffaa0022', color: sourceLabel.includes('graphify-live') ? '#00ff88' : '#ffaa00', border: `1px solid ${sourceLabel.includes('graphify-live') ? '#00ff8844' : '#ffaa0044'}` }}>
+          {sourceLabel.includes('graphify-live') ? '● live' : '◌ synthetic'}
+        </div>
+      )}
+      <div style={{ position: 'absolute', bottom: '10px', right: '12px', fontSize: '10px', color: '#333' }}>
+        scroll to zoom · drag to pan · click node to inspect
+      </div>
+    </div>
   );
 }

@@ -1,49 +1,89 @@
 'use client';
 
-export default function ConnectionLog({ logs }: { logs: any[] }) {
-  const typeColors: Record<string, string> = {
-    graphify_update: '#00ff88',
-    webhook_ingested: '#00ccff',
-    mcp_result: '#ffaa00',
-    error: '#ff0044',
-    system: '#888',
-  };
+import { useState } from 'react';
+
+interface LogEntry {
+  id: string;
+  time: string;
+  type: string;
+  source: string;
+  message: string;
+  status: string;
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  graphify_update: '#00ccff',
+  webhook_ingested: '#00ff88',
+  mcp_result: '#ffaa00',
+  error: '#ff0044',
+  system: '#555',
+  connected: '#00ff8866',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  success: '#00ff88', ingested: '#00ff88', queued: '#ffaa00',
+  error: '#ff0044', failed: '#ff0044',
+};
+
+export default function ConnectionLog({ logs }: { logs: LogEntry[] }) {
+  const [filter, setFilter] = useState<string>('all');
+
+  const types = ['all', ...Array.from(new Set(logs.map(l => l.type)))];
+  const filtered = filter === 'all' ? logs : logs.filter(l => l.type === filter);
 
   return (
-    <div style={{ maxHeight: '320px', overflowY: 'auto', fontSize: '12px', fontFamily: 'monospace' }}>
-      {logs.length === 0 ? (
-        <div style={{ color: '#333', textAlign: 'center', padding: '40px 0' }}>
-          Waiting for connections...
-        </div>
-      ) : (
-        logs.map((log) => (
-          <div
-            key={log.id}
+    <div>
+      {/* Filter chips */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+        {types.slice(0, 6).map(t => (
+          <button
+            key={t}
+            onClick={() => setFilter(t)}
             style={{
-              display: 'grid',
-              gridTemplateColumns: '50px 80px 100px 1fr 60px',
-              gap: '8px',
-              padding: '6px 8px',
-              borderBottom: '1px solid #111',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ color: '#333' }}>{log.time}</span>
-            <span style={{ color: typeColors[log.type] || '#888' }}>{log.type}</span>
-            <span style={{ color: '#555' }}>{log.source}</span>
-            <span style={{ color: '#aaa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {log.message}
-            </span>
-            <span style={{
-              color: log.status === 'success' || log.status === 'ingested' ? '#00ff88' : log.status === 'queued' ? '#ffaa00' : '#ff0044',
-              fontSize: '10px',
+              background: filter === t ? '#1a1a2e' : 'none',
+              border: `1px solid ${filter === t ? '#333' : '#111'}`,
+              borderRadius: '8px',
+              padding: '2px 8px',
+              fontSize: '9px',
+              color: filter === t ? (TYPE_COLORS[t] || '#aaa') : '#333',
+              cursor: 'pointer',
               textTransform: 'uppercase',
-            }}>
-              {log.status}
-            </span>
+              letterSpacing: '0.3px',
+            }}
+          >{t}</button>
+        ))}
+      </div>
+
+      <div style={{ maxHeight: '260px', overflowY: 'auto', fontFamily: 'monospace', fontSize: '11px' }}>
+        {filtered.length === 0 ? (
+          <div style={{ color: '#222', textAlign: 'center', padding: '40px 0', fontSize: '12px' }}>
+            {logs.length === 0 ? 'Waiting for connections...' : 'No events match this filter'}
           </div>
-        ))
-      )}
+        ) : (
+          filtered.map((log, i) => (
+            <div
+              key={log.id}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '52px 1fr 80px 50px',
+                gap: '6px',
+                padding: '5px 8px',
+                borderBottom: '1px solid #0d0d18',
+                alignItems: 'center',
+                animation: i === 0 ? 'slideIn 0.2s ease' : 'none',
+              }}
+            >
+              <span style={{ color: '#2a2a3a' }}>{log.time}</span>
+              <div style={{ overflow: 'hidden' }}>
+                <span style={{ color: TYPE_COLORS[log.type] || '#555', marginRight: '6px' }}>{log.type}</span>
+                <span style={{ color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.message}</span>
+              </div>
+              <span style={{ color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'right' }}>{log.source}</span>
+              <span style={{ color: STATUS_COLORS[log.status] || '#444', fontSize: '9px', textTransform: 'uppercase', textAlign: 'right' }}>{log.status}</span>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
