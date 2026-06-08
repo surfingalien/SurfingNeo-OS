@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { LayoutGrid, GitBranch, Server, Zap, Puzzle, Brain, RefreshCw, Clock, ChevronLeft, ChevronRight, X, Database } from 'lucide-react';
+import { LayoutGrid, GitBranch, Server, Zap, Puzzle, Brain, RefreshCw, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain' | 'data';
+type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain';
 
 interface SidebarProps {
   view: View;
@@ -17,9 +17,8 @@ interface SidebarProps {
 const NAV_ITEMS: { id: View; label: string; badge?: string; badgeColor?: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid className="w-4 h-4" /> },
   { id: 'graphify', label: 'Graphify', badge: 'LIVE', badgeColor: '#10b981', icon: <GitBranch className="w-4 h-4" /> },
-  { id: 'mcp', label: 'MCP Servers', badge: '12', badgeColor: '#6366f1', icon: <Server className="w-4 h-4" /> },
-  { id: 'skills', label: 'Skills', badge: '22', badgeColor: '#6366f1', icon: <Zap className="w-4 h-4" /> },
-  { id: 'data', label: 'Data Intelligence', badge: '35+', badgeColor: '#f0b90b', icon: <Database className="w-4 h-4" /> },
+  { id: 'mcp', label: 'MCP Servers', badge: '10', badgeColor: '#6366f1', icon: <Server className="w-4 h-4" /> },
+  { id: 'skills', label: 'Skills', badge: '14', badgeColor: '#6366f1', icon: <Zap className="w-4 h-4" /> },
   { id: 'plugins', label: 'Plugins', icon: <Puzzle className="w-4 h-4" /> },
   { id: 'brain', label: 'Agentic Brain', icon: <Brain className="w-4 h-4" /> },
 ];

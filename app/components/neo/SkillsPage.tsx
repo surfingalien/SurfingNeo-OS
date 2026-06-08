@@ -26,7 +26,7 @@ const TAG_COLORS: Record<string, string> = {
   optimize: '#6366f1', prompts: '#22d3ee', cot: '#10b981',
 };
 
-type FilterSource = 'all' | 'finsurfing' | 'prompt-eng' | 'openbb' | 'graphify';
+type FilterSource = 'all' | 'finsurfing' | 'prompt-eng';
 
 export function SkillsPage() {
   const [filter, setFilter] = useState<FilterSource>('all');
@@ -46,8 +46,6 @@ export function SkillsPage() {
 
   const fsCount = skills.filter(s => s.source === 'finsurfing').length;
   const peCount = skills.filter(s => s.source === 'prompt-eng').length;
-  const obbCount = skills.filter(s => s.source === 'openbb').length;
-  const gfyCount = skills.filter(s => s.source === 'graphify').length;
 
   return (
     <div className="neo-page-padding">
@@ -55,7 +53,7 @@ export function SkillsPage() {
       <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--neo-text)', margin: 0 }}>Skills Registry</h1>
-          <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>AI capabilities from FinSurfing · PromptForge · OpenBB · Graphify</p>
+          <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>AI capabilities from FinSurfing + PromptForge</p>
         </div>
         {platformStatus && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -82,10 +80,8 @@ export function SkillsPage() {
       {/* Filter tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
         {([
-          ['all', `All (${skills.length})`],
+          ['all', `All Skills (${skills.length})`],
           ['finsurfing', `FinSurfing 🏄 (${fsCount})`],
-          ['openbb', `OpenBB 📊 (${obbCount})`],
-          ['graphify', `Graphify 🕸️ (${gfyCount})`],
           ['prompt-eng', `PromptForge 🔮 (${peCount})`],
         ] as [FilterSource, string][]).map(([id, label]) => (
           <button
@@ -123,14 +119,8 @@ export function SkillsPage() {
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
               <div style={{
                 width: '38px', height: '38px', borderRadius: '50%',
-                background: skill.source === 'finsurfing' ? 'rgba(16,185,129,0.12)'
-                  : skill.source === 'openbb' ? 'rgba(240,185,11,0.12)'
-                  : skill.source === 'graphify' ? 'rgba(34,211,238,0.12)'
-                  : 'rgba(99,102,241,0.12)',
-                border: `1px solid ${skill.source === 'finsurfing' ? 'rgba(16,185,129,0.3)'
-                  : skill.source === 'openbb' ? 'rgba(240,185,11,0.3)'
-                  : skill.source === 'graphify' ? 'rgba(34,211,238,0.3)'
-                  : 'rgba(99,102,241,0.3)'}`,
+                background: skill.source === 'finsurfing' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.12)',
+                border: `1px solid ${skill.source === 'finsurfing' ? 'rgba(16,185,129,0.3)' : 'rgba(99,102,241,0.3)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '16px', flexShrink: 0,
               }}>{SKILL_ICONS[skill.id] ?? '⚡'}</div>
@@ -167,15 +157,9 @@ export function SkillsPage() {
                   : skill.source === 'openbb' ? 'rgba(240,185,11,0.08)'
                   : skill.source === 'graphify' ? 'rgba(34,211,238,0.08)'
                   : 'rgba(99,102,241,0.08)',
-                color: skill.source === 'finsurfing' ? '#10b981'
-                  : skill.source === 'openbb' ? '#f0b90b'
-                  : skill.source === 'graphify' ? '#22d3ee'
-                  : '#a5b4fc',
+                color: skill.source === 'finsurfing' ? '#10b981' : '#a5b4fc',
               }}>
-                {skill.source === 'finsurfing' ? '🏄 FinSurfing'
-                  : skill.source === 'openbb' ? '📊 OpenBB'
-                  : skill.source === 'graphify' ? '🕸️ Graphify'
-                  : '🔮 PromptForge'}
+                {skill.source === 'finsurfing' ? '🏄 FinSurfing' : '🔮 PromptForge'}
               </span>
             </div>
           </motion.div>
