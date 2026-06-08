@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
   title: 'SurfingNeo-OS · Neural Mesh Dashboard',
@@ -18,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
