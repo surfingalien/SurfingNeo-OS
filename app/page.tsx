@@ -43,7 +43,7 @@ function ThemePicker({ current, onChange }: { current: string; onChange: (id: st
         <span style={{ fontSize: '9px', marginLeft: '2px' }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: '36px', right: 0, background: t.panel, border: `1px solid ${t.borderStrong}`, borderRadius: '10px', padding: '6px', zIndex: 200, minWidth: '160px', boxShadow: '0 8px 24px #00000066', animation: 'slideIn 0.15s ease' }}>
+        <div style={{ position: 'absolute', bottom: '44px', right: 0, background: t.panel, border: `1px solid ${t.borderStrong}`, borderRadius: '10px', padding: '6px', zIndex: 200, minWidth: '160px', boxShadow: '0 -8px 24px #00000066', animation: 'slideIn 0.15s ease' }}>
           {Object.values(THEMES).map(theme => (
             <button key={theme.id} onClick={() => { onChange(theme.id); setOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '7px 10px', background: current === theme.id ? t.primaryBg : 'transparent', border: `1px solid ${current === theme.id ? t.primaryBorder : 'transparent'}`, borderRadius: '6px', cursor: 'pointer', marginBottom: '2px', color: current === theme.id ? t.primary : t.textMuted, fontSize: '12px', transition: 'all 0.15s' }}>
               <span>{theme.emoji}</span>
