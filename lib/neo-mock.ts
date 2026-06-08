@@ -132,3 +132,49 @@ export function generateEvent() {
       : 'circuit.trip service=prompt-eng',
   };
 }
+
+// MCP Servers
+export const mcpServers = [
+  { id: 'claude', name: 'Claude claude-sonnet-4-6', protocol: 'HTTP/SSE', description: 'Primary AI reasoning + tool use', model: 'claude-sonnet-4-6', tools: 8, status: 'connected', color: '#6366f1' },
+  { id: 'groq', name: 'Groq LLaMA 3.3 70B', protocol: 'HTTP', description: 'Fallback fast inference', model: 'llama-3.3-70b', tools: 3, status: 'connected', color: '#10b981' },
+  { id: 'finnhub', name: 'Finnhub Market Data', protocol: 'HTTP', description: 'Real-time US equity data', model: 'quote/chart/search', tools: 5, status: 'connected', color: '#f59e0b' },
+  { id: 'fmp', name: 'FMP Financial Data', protocol: 'HTTP', description: 'Fundamentals + analyst ratings', model: 'analyst/earnings', tools: 4, status: 'connected', color: '#22d3ee' },
+  { id: 'fred', name: 'FRED Macro Data', protocol: 'HTTP', description: 'Rates, inflation, VIX, GDP', model: 'series/observations', tools: 4, status: 'connected', color: '#a78bfa' },
+  { id: 'edgar', name: 'SEC EDGAR', protocol: 'HTTP', description: 'Insider transactions (free)', model: 'company/filings', tools: 3, status: 'connected', color: '#f97316' },
+  { id: 'alpaca', name: 'Alpaca Trading', protocol: 'HTTP/WS', description: 'Paper + live order execution', model: 'orders/positions', tools: 6, status: 'connected', color: '#ec4899' },
+  { id: 'reddit', name: 'Reddit Sentiment', protocol: 'HTTP', description: 'WSB + investing subreddits', model: 'hot/new/sentiment', tools: 2, status: 'connected', color: '#ff4500' },
+  { id: 'newsapi', name: 'NewsAPI', protocol: 'HTTP', description: 'Financial news aggregation', model: 'everything/headlines', tools: 2, status: 'degraded', color: '#94a3b8' },
+  { id: 'openbb', name: 'OpenBB Platform', protocol: 'HTTP', description: 'Multi-source terminal data', model: 'equity/options', tools: 7, status: 'disconnected', color: '#475569' },
+];
+
+// Skills
+export const skills = [
+  { id: 'market-scanner', name: 'Market Scanner', endpoint: '/api/ai-brain/analyze', description: 'AI Brain 5-agent scan across 30+ universes', tags: ['ai', 'scan', 'multi-agent'], status: 'active', source: 'finsurfing', runs: 1240 },
+  { id: 'symbol-analyzer', name: 'Symbol Analyzer', endpoint: '/api/trading-analysis', description: 'Deep technical + AI signal for any ticker', tags: ['ai', 'technical', 'signals'], status: 'active', source: 'finsurfing', runs: 892 },
+  { id: 'advisory-engine', name: 'Advisory Engine', endpoint: '/api/recommendations', description: '10 investor personas × buy signals', tags: ['ai', 'personas', 'advisory'], status: 'active', source: 'finsurfing', runs: 634 },
+  { id: 'social-sentiment', name: 'Social Sentiment', endpoint: '/api/market-intel', description: 'Real-time Reddit/WSB sentiment scoring', tags: ['alt-data', 'reddit', 'wsb'], status: 'active', source: 'finsurfing', runs: 445 },
+  { id: 'risk-scorer', name: 'Risk Scorer', endpoint: '/api/risk/score', description: 'VaR + portfolio concentration risk', tags: ['risk', 'portfolio'], status: 'active', source: 'finsurfing', runs: 318 },
+  { id: 'earnings-tracker', name: 'Earnings Tracker', endpoint: '/api/earnings', description: 'Pre/post earnings drift detection', tags: ['earnings', 'catalyst'], status: 'active', source: 'finsurfing', runs: 221 },
+  { id: 'prompt-optimizer', name: 'Prompt Optimizer', endpoint: '/api/prompt/optimize', description: 'Token-efficient prompt rewriting', tags: ['llm', 'tokens', 'optimization'], status: 'active', source: 'prompt-eng', runs: 870 },
+  { id: 'chain-executor', name: 'Chain Executor', endpoint: '/api/chain/execute', description: 'Multi-step LLM pipeline runner', tags: ['chain', 'pipeline', 'llm'], status: 'active', source: 'prompt-eng', runs: 680 },
+  { id: 'template-engine', name: 'Template Engine', endpoint: '/api/template/render', description: 'Dynamic prompt template library', tags: ['templates', 'render'], status: 'active', source: 'prompt-eng', runs: 1540 },
+  { id: 'eval-runner', name: 'Eval Runner', endpoint: '/api/eval/run', description: 'LLM output quality benchmarking', tags: ['eval', 'benchmark', 'quality'], status: 'inactive', source: 'prompt-eng', runs: 480 },
+  { id: 'context-compressor', name: 'Context Compressor', endpoint: '/api/context/compress', description: 'Intelligent context window management', tags: ['context', 'compression'], status: 'active', source: 'prompt-eng', runs: 290 },
+  { id: 'rag-pipeline', name: 'RAG Pipeline', endpoint: '/api/rag/query', description: 'Retrieval-augmented generation with Graphify', tags: ['rag', 'retrieval', 'graphify'], status: 'active', source: 'prompt-eng', runs: 567 },
+];
+
+// Plugins
+export const plugins = [
+  { id: 'superpowers', name: 'Superpowers', subtitle: 'Planning + subagents', description: 'Intelligent planning mode with subagent spawning. Asks better questions as it goes.', version: 'v1.4.2', tag: 'Claude Code', status: 'active', icon: '🚀', color: '#6366f1' },
+  { id: 'context7', name: 'Context7', subtitle: 'Doc search plugin', description: 'Documentation provider for AI agents. Find and read docs, use APIs properly.', version: 'v2.1.0', tag: 'Universal', status: 'active', icon: '📖', color: '#22d3ee' },
+  { id: 'browser-agent', name: 'Browser Agent', subtitle: 'Web automation', description: 'Browser automation via Playwright. Navigate, scrape, interact with web pages.', version: 'v1.0.8', tag: 'MCP', status: 'active', icon: '🖥️', color: '#10b981' },
+  { id: 'pr-reviewer', name: 'PR Reviewer', subtitle: 'Code review AI', description: 'Automated PR review with impact analysis. Uses graph context for deeper insights.', version: 'v1.2.1', tag: 'GitHub', status: 'active', icon: '🔀', color: '#f59e0b' },
+  { id: 'vision-extract', name: 'Vision Extract', subtitle: 'Image to code', description: 'Convert screenshots and mockups into working code. Figma to React component.', version: 'v0.9.3', tag: 'Vision', status: 'update', icon: '👁️', color: '#a78bfa' },
+];
+
+// Agents
+export const agents = [
+  { id: 'coder', name: 'Coder Agent', description: 'Implementing features', status: 'active', icon: '</>' },
+  { id: 'research', name: 'Research Agent', description: 'Searching Graphify docs', status: 'active', icon: '🔍' },
+  { id: 'review', name: 'Review Agent', description: 'Idle — awaiting PR', status: 'idle', icon: '✔' },
+];

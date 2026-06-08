@@ -10,11 +10,17 @@ import { DataFlow } from './DataFlow';
 import { BrainHealth } from './BrainHealth';
 import { EventStream } from './EventStream';
 import { SystemStatus } from './SystemStatus';
+import { Sidebar } from './Sidebar';
+import { MCPServersPage } from './MCPServersPage';
+import { SkillsPage } from './SkillsPage';
+import { PluginsPage } from './PluginsPage';
+import { AgenticBrainPage } from './AgenticBrainPage';
 import { type Theme, type GraphNode } from '@/lib/neo-mock';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Brain, Radio, Cpu } from 'lucide-react';
 
 type Tab = 'topology' | 'platforms' | 'trajectory';
+type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain';
 
 const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: 'topology', label: 'Topology', emoji: '🔗' },
@@ -22,14 +28,11 @@ const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: 'trajectory', label: 'Trajectory', emoji: '📈' },
 ];
 
-export function Dashboard() {
-  const [theme, setTheme] = useState<Theme>('neural');
+function DashboardContent({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) => void }) {
   const [tab, setTab] = useState<Tab>('topology');
   const [selected, setSelected] = useState<GraphNode | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
-
-  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
 
   const refresh = () => {
     setRefreshing(true);
@@ -39,9 +42,8 @@ export function Dashboard() {
   const handleSelect = useCallback((n: GraphNode | null) => setSelected(n), []);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--neo-bg)', color: 'var(--neo-text)' }}>
+    <>
       <Header theme={theme} setTheme={setTheme} onRefresh={refresh} refreshing={refreshing} lastUpdated={lastUpdated} />
-
       <main className="px-6 py-5 grid gap-5" style={{ gridTemplateColumns: '1fr 380px' }}>
         {/* Left column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
@@ -90,6 +92,87 @@ export function Dashboard() {
         <span>SurfingNeo-OS v1.0.0 · Neural Mesh Control Center</span>
         <span>real-time AI operations · us-east-1</span>
       </footer>
+    </>
+  );
+}
+
+function GraphifyView() {
+  const [tab, setTab] = useState<Tab>('topology');
+  const [selected, setSelected] = useState<GraphNode | null>(null);
+  const handleSelect = useCallback((n: GraphNode | null) => setSelected(n), []);
+
+  return (
+    <div style={{ padding: '28px 32px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--neo-text)', margin: 0 }}>Graphify</h1>
+          <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>Live knowledge graph topology</p>
+        </div>
+        <span style={{
+          fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '20px',
+          background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)',
+          display: 'flex', alignItems: 'center', gap: '6px',
+        }}>
+          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+          LIVE
+        </span>
+      </div>
+      <Panel>
+        <div className="flex border-b px-2 pt-2 gap-1" style={{ borderColor: 'var(--neo-border)' }}>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => { setTab(t.id); setSelected(null); }}
+              className="relative px-4 py-2.5 text-xs font-medium flex items-center gap-1.5 transition-colors"
+              style={{ color: tab === t.id ? 'var(--neo-text)' : 'var(--neo-muted)' }}>
+              <span>{t.emoji}</span>{t.label}
+              {tab === t.id && (
+                <motion.div layoutId="graphify-tab-ul" className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ background: 'linear-gradient(to right, var(--neo-primary), var(--neo-secondary))' }} />
+              )}
+            </button>
+          ))}
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={tab} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} transition={{ duration: 0.22 }}>
+            {tab === 'topology' && <ForceGraph onSelect={handleSelect} selectedId={selected?.id ?? null} />}
+            {tab === 'platforms' && <PlatformMesh />}
+            {tab === 'trajectory' && <TrajectoryChart />}
+          </motion.div>
+        </AnimatePresence>
+        <AnimatePresence>
+          {tab === 'topology' && selected && <NodeDetail node={selected} onClose={() => setSelected(null)} />}
+        </AnimatePresence>
+      </Panel>
+    </div>
+  );
+}
+
+export function Dashboard() {
+  const [theme, setTheme] = useState<Theme>('neural');
+  const [view, setView] = useState<View>('dashboard');
+
+  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--neo-bg)' }}>
+      <Sidebar view={view} setView={setView} />
+      <div style={{ flex: 1, overflow: 'auto', color: 'var(--neo-text)' }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={view}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            {view === 'dashboard' && <DashboardContent theme={theme} setTheme={setTheme} />}
+            {view === 'graphify' && <GraphifyView />}
+            {view === 'mcp' && <MCPServersPage />}
+            {view === 'skills' && <SkillsPage />}
+            {view === 'plugins' && <PluginsPage />}
+            {view === 'brain' && <AgenticBrainPage />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
