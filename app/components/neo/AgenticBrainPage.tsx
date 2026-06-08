@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { agents } from '@/lib/neo-mock';
+import { agents, graphifySchema, obsidianGit } from '@/lib/neo-mock';
 
 const reasoningCapabilities = [
   { label: 'Multi-Agent Parallelism', value: '5 Agents', color: '#6366f1', pct: 100 },
@@ -11,7 +11,13 @@ const reasoningCapabilities = [
 const memoryMetrics = [
   { label: 'Prediction Log (JSONL)', value: '2,847 entries', color: '#6366f1', pct: 85 },
   { label: 'Win-Rate Tracking', value: '1d / 7d / 30d', color: '#a78bfa', pct: 70 },
-  { label: 'Skill Cache', value: '12 loaded', color: '#10b981', pct: 50 },
+  { label: 'Skill Cache', value: '22 loaded', color: '#10b981', pct: 55 },
+];
+
+const graphifyMemory = [
+  { label: 'Graph Nodes', value: graphifySchema.stats.totalNodes.toLocaleString(), color: '#22d3ee', pct: 82 },
+  { label: 'Graph Edges', value: graphifySchema.stats.totalEdges.toLocaleString(), color: '#6366f1', pct: 70 },
+  { label: 'Token Reduction', value: graphifySchema.stats.tokenReduction, color: '#10b981', pct: 95 },
 ];
 
 const AGENT_ICON_COLORS: Record<string, string> = {
@@ -21,6 +27,8 @@ const AGENT_ICON_COLORS: Record<string, string> = {
   macro: '#22d3ee',
   risk: '#ef4444',
   supervisor: '#a78bfa',
+  'graph-agent': '#22d3ee',
+  'data-agent': '#f0b90b',
 };
 
 const BRAIN_STEPS = [
@@ -191,6 +199,56 @@ export function AgenticBrainPage() {
           ))}
         </div>
       </motion.div>
+
+      {/* Memory Layers — Graphify + Obsidian Git */}
+      <div className="neo-brain-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+        {/* Graphify Knowledge Graph */}
+        <Card delay={0.3}>
+          <CardHeader icon="🕸️" title="Graphify Knowledge Layer" sub={`${graphifySchema.stats.totalNodes.toLocaleString()} nodes · ${graphifySchema.stats.communities} communities · ${graphifySchema.stats.tokenReduction} token reduction`} />
+          {graphifyMemory.map(m => <ProgressRow key={m.label} {...m} />)}
+          <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {graphifySchema.edgeTypes.map(e => (
+              <span key={e.type} style={{
+                fontSize: '9px', fontWeight: 700, padding: '2px 6px', borderRadius: '4px',
+                background: e.color + '20', color: e.color, border: `1px solid ${e.color}40`,
+                fontFamily: 'monospace',
+              }}>{e.type}</span>
+            ))}
+          </div>
+        </Card>
+
+        {/* Obsidian Git State */}
+        <Card delay={0.38}>
+          <CardHeader icon="🌿" title="Obsidian Git State" sub={`Auto-commit every ${obsidianGit.autoCommitInterval / 60000}m · ${obsidianGit.syncMethod} sync · branch: ${obsidianGit.currentBranch}`} />
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Staged', value: obsidianGit.status.staged, color: '#10b981' },
+              { label: 'Changed', value: obsidianGit.status.changed, color: '#f59e0b' },
+              { label: 'Untracked', value: obsidianGit.status.untracked, color: '#94a3b8' },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '18px', fontWeight: 800, color: s.color }}>{s.value}</div>
+                <div style={{ fontSize: '10px', color: 'var(--neo-muted)' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '6px', padding: '10px', fontFamily: 'monospace', fontSize: '10px' }}>
+            <div style={{ color: '#22d3ee' }}>{obsidianGit.lastCommit.hash}</div>
+            <div style={{ color: 'var(--neo-text)', marginTop: '2px' }}>{obsidianGit.lastCommit.message}</div>
+            <div style={{ color: 'var(--neo-muted)', marginTop: '2px' }}>{obsidianGit.lastCommit.author} · {obsidianGit.lastCommit.ago}</div>
+          </div>
+          <div style={{ marginTop: '10px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+            {obsidianGit.branches.map(b => (
+              <span key={b} style={{
+                fontSize: '10px', padding: '2px 7px', borderRadius: '5px', fontFamily: 'monospace',
+                background: b === obsidianGit.currentBranch ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)',
+                color: b === obsidianGit.currentBranch ? '#a5b4fc' : 'var(--neo-muted)',
+                border: `1px solid ${b === obsidianGit.currentBranch ? 'rgba(99,102,241,0.4)' : 'var(--neo-border)'}`,
+              }}>{b}</span>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

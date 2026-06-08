@@ -59,52 +59,63 @@ export const graph: { nodes: GraphNode[]; links: GraphLink[] } = {
     { id: 'api-brain', label: 'API Brain', type: 'brain', status: 'healthy', size: 45230, capacity: 62 },
     { id: 'secondary-brain', label: 'Secondary Brain', type: 'brain', status: 'healthy', size: 1847, capacity: 54 },
     { id: 'graphify', label: 'Graphify', type: 'platform', status: 'healthy', size: 1200, capacity: 71 },
+    { id: 'openbb', label: 'OpenBB', type: 'platform', status: 'healthy', size: 3400, capacity: 55 },
     { id: 'mcp-claude', label: 'MCP Claude', type: 'platform', status: 'healthy', size: 980, capacity: 48 },
     { id: 'vercel-api', label: 'Vercel API', type: 'platform', status: 'healthy', size: 8400, capacity: 33 },
     { id: 'site-1', label: 'FinSurfing', type: 'site', status: 'healthy', size: 620, capacity: 45 },
     { id: 'site-2', label: 'Prompt-Eng', type: 'site', status: 'degraded', size: 410, capacity: 88 },
     { id: 'memory-space', label: 'Memory Space', type: 'memory', status: 'healthy', size: 1560, capacity: 60 },
     { id: 'skill-registry', label: 'Skill Registry', type: 'memory', status: 'healthy', size: 240, capacity: 22 },
+    { id: 'obsidian-vault', label: 'Obsidian Vault', type: 'memory', status: 'healthy', size: 890, capacity: 38 },
   ],
   links: [
     { source: 'kb-core', target: 'api-brain', strength: 0.95, traffic: 3400 },
     { source: 'kb-core', target: 'secondary-brain', strength: 0.9, traffic: 2100 },
     { source: 'kb-core', target: 'memory-space', strength: 0.85, traffic: 1800 },
     { source: 'api-brain', target: 'graphify', strength: 0.8, traffic: 1200 },
+    { source: 'api-brain', target: 'openbb', strength: 0.85, traffic: 2100 },
     { source: 'api-brain', target: 'vercel-api', strength: 0.88, traffic: 2900 },
     { source: 'secondary-brain', target: 'mcp-claude', strength: 0.78, traffic: 880 },
     { source: 'secondary-brain', target: 'skill-registry', strength: 0.7, traffic: 320 },
     { source: 'graphify', target: 'site-1', strength: 0.72, traffic: 540 },
     { source: 'graphify', target: 'site-2', strength: 0.66, traffic: 410 },
+    { source: 'openbb', target: 'site-1', strength: 0.8, traffic: 1650 },
     { source: 'mcp-claude', target: 'memory-space', strength: 0.6, traffic: 230 },
     { source: 'vercel-api', target: 'site-1', strength: 0.82, traffic: 1100 },
     { source: 'vercel-api', target: 'site-2', strength: 0.74, traffic: 760 },
     { source: 'memory-space', target: 'skill-registry', strength: 0.65, traffic: 180 },
+    { source: 'memory-space', target: 'obsidian-vault', strength: 0.72, traffic: 420 },
     { source: 'api-brain', target: 'secondary-brain', strength: 0.7, traffic: 640 },
+    { source: 'graphify', target: 'obsidian-vault', strength: 0.68, traffic: 310 },
   ],
 };
 
 export const platforms = [
   { id: 'finsurfing', name: 'FinSurfing', emoji: '🏄', health: 96, latency: 42, status: 'healthy',
-    endpoints: [{ path: '/api/quotes', method: 'GET', latency: 38, status: 200 }, { path: '/api/portfolio', method: 'POST', latency: 64, status: 200 }, { path: '/api/sync', method: 'PUT', latency: 121, status: 200 }] },
-  { id: 'prompt-eng', name: 'Prompt-Eng', emoji: '🔮', health: 78, latency: 89, status: 'degraded',
-    endpoints: [{ path: '/api/generate', method: 'POST', latency: 142, status: 200 }, { path: '/api/templates', method: 'GET', latency: 28, status: 200 }, { path: '/api/eval', method: 'POST', latency: 312, status: 503 }] },
-  { id: 'graphify', name: 'Graphify', emoji: '⚙️', health: 99, latency: 24, status: 'healthy',
-    endpoints: [{ path: '/api/nodes', method: 'GET', latency: 18, status: 200 }, { path: '/api/edges', method: 'POST', latency: 32, status: 200 }, { path: '/api/query', method: 'POST', latency: 41, status: 200 }] },
-  { id: 'mcp', name: 'MCP', emoji: '🔌', health: 94, latency: 55, status: 'healthy',
-    endpoints: [{ path: '/mcp/tools', method: 'GET', latency: 22, status: 200 }, { path: '/mcp/invoke', method: 'POST', latency: 88, status: 200 }, { path: '/mcp/stream', method: 'GET', latency: 0, status: 101 }] },
+    endpoints: [{ path: '/api/quote', method: 'GET', latency: 38, status: 200 }, { path: '/api/ai-brain/analyze', method: 'POST', latency: 64, status: 200 }, { path: '/api/agentic-os/stats', method: 'GET', latency: 121, status: 200 }] },
+  { id: 'prompt-eng', name: 'PromptForge', emoji: '🔮', health: 78, latency: 89, status: 'degraded',
+    endpoints: [{ path: '/api/scout', method: 'POST', latency: 142, status: 200 }, { path: '/api/chat', method: 'POST', latency: 88, status: 200 }, { path: '/api/optimize', method: 'POST', latency: 312, status: 503 }] },
+  { id: 'graphify', name: 'Graphify', emoji: '🕸️', health: 99, latency: 24, status: 'healthy',
+    endpoints: [{ path: '/query', method: 'POST', latency: 18, status: 200 }, { path: '/path', method: 'POST', latency: 32, status: 200 }, { path: '/explain', method: 'GET', latency: 41, status: 200 }] },
+  { id: 'openbb', name: 'OpenBB Platform', emoji: '📊', health: 91, latency: 68, status: 'healthy',
+    endpoints: [{ path: '/equity/price/historical', method: 'GET', latency: 58, status: 200 }, { path: '/economy/indicators', method: 'GET', latency: 72, status: 200 }, { path: '/crypto/price/historical', method: 'GET', latency: 81, status: 200 }] },
 ];
 
 const flowMessages = [
-  { platform: 'graphify', level: 'info', msg: 'node.create kb-doc-{id}' },
+  { platform: 'graphify', level: 'info', msg: 'node.create kb-doc-{id} type=concept' },
   { platform: 'api-brain', level: 'info', msg: 'request 200 POST /v1/embed ({lat}ms)' },
   { platform: 'mcp', level: 'info', msg: 'tool.invoke claude.search ok' },
   { platform: 'secondary', level: 'ok', msg: 'insight generated confidence=0.94' },
   { platform: 'webhook', level: 'warn', msg: 'rate-limit nearing threshold (82%)' },
   { platform: 'sse', level: 'info', msg: 'client.connect total={n}' },
-  { platform: 'kb-core', level: 'ok', msg: 'edge.upsert strength=0.87' },
+  { platform: 'kb-core', level: 'ok', msg: 'edge.upsert type=INFERRED strength=0.87' },
   { platform: 'vercel', level: 'info', msg: 'deploy.ready prod region=iad1' },
   { platform: 'graphify', level: 'error', msg: 'circuit.trip retry in 30s' },
+  { platform: 'openbb', level: 'info', msg: 'equity.price.historical AAPL provider=fmp ({lat}ms)' },
+  { platform: 'openbb', level: 'ok', msg: 'economy.indicators GDP fetched via FRED' },
+  { platform: 'obsidian', level: 'info', msg: 'vault.sync commit=auto-{id} files=3' },
+  { platform: 'graphify', level: 'ok', msg: 'community.detect leiden clusters={n}' },
+  { platform: 'openbb', level: 'info', msg: 'crypto.price BTC provider=binance ({lat}ms)' },
 ];
 
 export function generateFlowEntry() {
@@ -133,10 +144,12 @@ export function generateEvent() {
   };
 }
 
-// MCP Servers — sourced from FinSurfing /api/agentic-os/mcps
+// MCP Servers — FinSurfing providers + OpenBB Platform + Graphify MCP
 export const mcpServers = [
   { id: 'claude', name: 'Claude Sonnet 4.6', protocol: 'HTTP/SSE', description: 'Primary AI reasoning engine (8 tools)', model: 'claude-sonnet-4-6', tools: 8, status: 'connected', color: '#6366f1' },
   { id: 'groq', name: 'Groq LLaMA 3.3 70B', protocol: 'HTTP', description: 'Fallback fast inference (3 tools)', model: 'llama-3.3-70b', tools: 3, status: 'conditional', color: '#10b981' },
+  { id: 'openbb', name: 'OpenBB Platform', protocol: 'HTTP/MCP', description: 'Connect-once financial hub — 35+ providers, REST + MCP server', model: 'openbb-mcp-server ^1.4.1', tools: 20, status: 'connected', color: '#f0b90b' },
+  { id: 'graphify-mcp', name: 'Graphify MCP', protocol: 'stdio/MCP', description: 'Knowledge graph as MCP server — query, path-find, explain (71.5× token reduction)', model: 'graphify --mcp', tools: 6, status: 'connected', color: '#22d3ee' },
   { id: 'finnhub', name: 'Finnhub Market Data', protocol: 'HTTP/WS', description: 'Real-time equity data + WS stream (5 tools)', model: 'quote/chart/search', tools: 5, status: 'conditional', color: '#f59e0b' },
   { id: 'fmp', name: 'FMP Financial Data', protocol: 'HTTP', description: 'Fundamentals + analyst ratings (4 tools)', model: 'analyst/earnings', tools: 4, status: 'conditional', color: '#22d3ee' },
   { id: 'fred', name: 'FRED Macro Data', protocol: 'HTTP', description: '14 macro series — rates, inflation, VIX, GDP', model: 'series/observations', tools: 14, status: 'conditional', color: '#a78bfa' },
@@ -163,6 +176,18 @@ export const skills = [
   { id: 'prompt-chat', name: 'Prompt Chat', endpoint: '/api/chat', description: 'Server-side Claude proxy — API keys never exposed to client', tags: ['chat', 'proxy', 'anthropic'], status: 'active', source: 'prompt-eng', runs: 2140 },
   { id: 'council', name: 'Council Engine', endpoint: '/api/council', description: '5-advisor AI decision engine — contrarian + first-principles perspectives', tags: ['council', 'decision', 'contrarian'], status: 'active', source: 'prompt-eng', runs: 634 },
   { id: 'optimizer', name: 'Prompt Optimizer', endpoint: '/api/optimize', description: '6 modes: Clarity, CoT, Few-Shot, Concise, XML Structured, System Prompt', tags: ['optimize', 'prompts', 'cot'], status: 'active', source: 'prompt-eng', runs: 1290 },
+  // OpenBB skills — financial data endpoints via obb.* Python SDK + REST API
+  { id: 'openbb-equity', name: 'Equity History', endpoint: '/equity/price/historical', description: 'OHLCV + fundamentals for any ticker via Yahoo Finance, FMP, Polygon', tags: ['equity', 'ohlcv', 'openbb'], status: 'active', source: 'openbb', runs: 3120 },
+  { id: 'openbb-economy', name: 'Economy Indicators', endpoint: '/economy/indicators', description: 'GDP, CPI, rates, unemployment via FRED, OECD, IMF, EconDB', tags: ['macro', 'fred', 'openbb'], status: 'active', source: 'openbb', runs: 1840 },
+  { id: 'openbb-crypto', name: 'Crypto Market', endpoint: '/crypto/price/historical', description: 'Crypto OHLCV + on-chain data via Binance, CoinGecko, Polygon', tags: ['crypto', 'ohlcv', 'openbb'], status: 'active', source: 'openbb', runs: 2290 },
+  { id: 'openbb-news', name: 'Financial News', endpoint: '/news/company', description: 'Aggregated financial news via Benzinga + Yahoo Finance', tags: ['news', 'benzinga', 'openbb'], status: 'active', source: 'openbb', runs: 980 },
+  { id: 'openbb-etf', name: 'ETF Screener', endpoint: '/etf/search', description: 'ETF holdings, flows, screening across asset classes', tags: ['etf', 'screening', 'openbb'], status: 'active', source: 'openbb', runs: 645 },
+  { id: 'openbb-derivatives', name: 'Derivatives Chain', endpoint: '/derivatives/options/chains', description: 'Options chain + futures data via Cboe, Tradier, Deribit', tags: ['options', 'derivatives', 'openbb'], status: 'active', source: 'openbb', runs: 412 },
+  // Graphify skills — knowledge graph operations (safishamsi/graphify)
+  { id: 'graphify-query', name: 'Graph Query', endpoint: 'graphify query', description: 'Natural language query across knowledge graph — full-text concept search', tags: ['graph', 'query', 'nlp'], status: 'active', source: 'graphify', runs: 1560 },
+  { id: 'graphify-pathfind', name: 'Path Finder', endpoint: 'graphify path', description: 'Dijkstra shortest-path between any two concept nodes', tags: ['graph', 'pathfind', 'dijkstra'], status: 'active', source: 'graphify', runs: 780 },
+  { id: 'graphify-explain', name: 'Node Explain', endpoint: 'graphify explain', description: 'Full source context for any concept node + suggested questions', tags: ['graph', 'explain', 'context'], status: 'active', source: 'graphify', runs: 1120 },
+  { id: 'graphify-watch', name: 'Live Watch', endpoint: 'graphify --watch', description: 'Auto-sync graph on file changes — SHA256 incremental updates', tags: ['graph', 'watch', 'sync'], status: 'active', source: 'graphify', runs: 340 },
 ];
 
 // Plugins
@@ -174,7 +199,7 @@ export const plugins = [
   { id: 'vision-extract', name: 'Vision Extract', subtitle: 'Image to code', description: 'Convert screenshots and mockups into working code. Figma to React component.', version: 'v0.9.3', tag: 'Vision', status: 'update', icon: '👁️', color: '#a78bfa' },
 ];
 
-// Agents — 5-agent architecture from FinSurfing /api/ai-brain + Supervisor
+// Agents — 5-agent architecture from FinSurfing /api/ai-brain + Supervisor + Graph Agent
 export const agents = [
   { id: 'fundamental', name: 'Fundamental Analyst', description: 'Earnings, valuations, balance sheet quality', status: 'active', icon: '📊' },
   { id: 'technical', name: 'Technical Analyst', description: 'Price trends, momentum, support/resistance', status: 'active', icon: '📈' },
@@ -182,4 +207,64 @@ export const agents = [
   { id: 'macro', name: 'Macro Economist', description: 'Sector tailwinds + regime fit (14 FRED series)', status: 'active', icon: '🌐' },
   { id: 'risk', name: 'Risk Manager', description: 'Downside scenarios + concentration exposure', status: 'active', icon: '🛡️' },
   { id: 'supervisor', name: 'Supervisor', description: 'Contradiction engine — surfaces agent conflicts ≥25pt', status: 'active', icon: '🧠' },
+  { id: 'graph-agent', name: 'Graph Agent', description: 'Graphify query/path-find across knowledge graph', status: 'active', icon: '🕸️' },
+  { id: 'data-agent', name: 'Data Agent', description: 'OpenBB data fetcher — 35+ provider cascade', status: 'idle', icon: '🗄️' },
 ];
+
+// OpenBB data providers — 21 core + 14 optional
+export const openbbProviders = [
+  // Core providers
+  { id: 'yfinance', name: 'Yahoo Finance', category: 'Market Data', tier: 'core', description: 'Free equity, ETF, crypto OHLCV + fundamentals', status: 'active', color: '#6366f1' },
+  { id: 'fmp', name: 'Financial Modeling Prep', category: 'Market Data', tier: 'core', description: 'Fundamentals, analyst ratings, DCF models', status: 'active', color: '#22d3ee' },
+  { id: 'polygon', name: 'Polygon.io', category: 'Market Data', tier: 'core', description: 'Real-time + historical equity, options, forex', status: 'active', color: '#7c3aed' },
+  { id: 'tiingo', name: 'Tiingo', category: 'Market Data', tier: 'core', description: 'End-of-day + intraday with news feed', status: 'active', color: '#0ea5e9' },
+  { id: 'intrinio', name: 'Intrinio', category: 'Market Data', tier: 'core', description: 'Financial data API + standardized financials', status: 'active', color: '#10b981' },
+  { id: 'benzinga', name: 'Benzinga', category: 'News', tier: 'core', description: 'Financial news + analyst ratings', status: 'active', color: '#f59e0b' },
+  { id: 'fred', name: 'FRED', category: 'Economics', tier: 'core', description: 'Federal Reserve 800k+ economic time series', status: 'active', color: '#a78bfa' },
+  { id: 'oecd', name: 'OECD', category: 'Economics', tier: 'core', description: 'Global macro indicators and economic outlook', status: 'active', color: '#34d399' },
+  { id: 'imf', name: 'IMF', category: 'Economics', tier: 'core', description: 'International Monetary Fund macro data', status: 'active', color: '#60a5fa' },
+  { id: 'econdb', name: 'EconDB', category: 'Economics', tier: 'core', description: 'Aggregated macroeconomic database', status: 'active', color: '#f97316' },
+  { id: 'bls', name: 'BLS', category: 'Economics', tier: 'core', description: 'Bureau of Labor Statistics — jobs, CPI, PPI', status: 'active', color: '#ec4899' },
+  { id: 'sec', name: 'SEC EDGAR', category: 'Regulators', tier: 'core', description: 'Filings, insider transactions, Form 4', status: 'active', color: '#f97316' },
+  { id: 'cftc', name: 'CFTC', category: 'Regulators', tier: 'core', description: 'Commitments of Traders (COT) positioning data', status: 'active', color: '#ef4444' },
+  { id: 'congress', name: 'Congress.gov', category: 'Regulators', tier: 'core', description: 'Congressional trading disclosures', status: 'active', color: '#6366f1' },
+  // Optional providers
+  { id: 'alphavantage', name: 'Alpha Vantage', category: 'Market Data', tier: 'optional', description: 'Free API — equity, forex, crypto, indicators', status: 'inactive', color: '#94a3b8' },
+  { id: 'cboe', name: 'CBOE', category: 'Derivatives', tier: 'optional', description: 'VIX + options data from Chicago Board Options Exchange', status: 'inactive', color: '#94a3b8' },
+  { id: 'deribit', name: 'Deribit', category: 'Derivatives', tier: 'optional', description: 'Crypto derivatives — BTC/ETH options + futures', status: 'inactive', color: '#94a3b8' },
+  { id: 'finviz', name: 'Finviz', category: 'Screening', tier: 'optional', description: 'Stock screener with technical filters', status: 'inactive', color: '#94a3b8' },
+  { id: 'seeking-alpha', name: 'Seeking Alpha', category: 'News', tier: 'optional', description: 'Premium investment research + news', status: 'inactive', color: '#94a3b8' },
+  { id: 'tradier', name: 'Tradier', category: 'Derivatives', tier: 'optional', description: 'Options chains + broker integration', status: 'inactive', color: '#94a3b8' },
+  { id: 'wsj', name: 'Wall Street Journal', category: 'News', tier: 'optional', description: 'Market data + financial news (scraper)', status: 'inactive', color: '#94a3b8' },
+];
+
+// Graphify node/edge types (safishamsi/graphify)
+export const graphifySchema = {
+  nodeTypes: [
+    { type: 'concept', description: 'Extracted concept from docs/code', color: '#6366f1', count: 847 },
+    { type: 'class', description: 'OOP class via tree-sitter AST', color: '#22d3ee', count: 234 },
+    { type: 'function', description: 'Function/method definition', color: '#10b981', count: 612 },
+    { type: 'module', description: 'Import or file module', color: '#f59e0b', count: 189 },
+    { type: 'paper', description: 'Academic paper node (PDF)', color: '#a78bfa', count: 45 },
+    { type: 'image', description: 'Claude vision-analyzed asset', color: '#f97316', count: 28 },
+  ],
+  edgeTypes: [
+    { type: 'EXTRACTED', description: 'Directly stated in source material', color: '#10b981' },
+    { type: 'INFERRED', description: 'Derived from context analysis', color: '#f59e0b' },
+    { type: 'AMBIGUOUS', description: 'Uncertain — flagged for review', color: '#ef4444' },
+  ],
+  relations: ['contains', 'imports', 'calls', 'method', 'inherits', 'uses'],
+  stats: { totalNodes: 1955, totalEdges: 4823, godNodes: 12, communities: 18, tokenReduction: '71.5×' },
+};
+
+// Obsidian Git settings schema + sync state
+export const obsidianGit = {
+  syncMethod: 'rebase' as const,
+  autoCommitInterval: 300000, // 5 min
+  autoPullOnBoot: true,
+  currentAction: 'idle' as const,
+  lastCommit: { hash: 'a3f9d12', message: 'auto: vault sync 14 files', author: 'surfingalien', ago: '8m ago' },
+  status: { staged: 0, changed: 3, untracked: 1 },
+  branches: ['main', 'staging', 'agents-v2'],
+  currentBranch: 'main',
+};
