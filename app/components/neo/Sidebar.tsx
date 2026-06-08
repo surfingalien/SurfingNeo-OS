@@ -42,6 +42,21 @@ function useClock() {
   return time;
 }
 
+function useSnapshot() {
+  const [snapshot, setSnapshot] = useState<Date>(new Date());
+  const [changeCount, setChangeCount] = useState(0);
+  const bump = () => { setChangeCount(c => c + 1); };
+  const commit = () => { setSnapshot(new Date()); setChangeCount(0); };
+  return { snapshot, changeCount, bump, commit };
+}
+
+function fmtAgo(d: Date) {
+  const s = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  return `${Math.floor(s / 3600)}h ago`;
+}
+
 function SidebarContent({
   view, setView, collapsed, setCollapsed, onClose
 }: {
@@ -50,6 +65,7 @@ function SidebarContent({
   onClose?: () => void;
 }) {
   const time = useClock();
+  const { snapshot, changeCount, commit } = useSnapshot();
 
   return (
     <div style={{
@@ -184,6 +200,16 @@ function SidebarContent({
             </div>
             <div style={{ fontSize: '11px', color: 'var(--neo-muted)' }}>
               Cron Jobs: <span style={{ color: '#10b981', fontWeight: 600 }}>7 active</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+              <span style={{ fontSize: '10px', color: 'var(--neo-faint)', fontFamily: 'monospace' }}>
+                snapshot: {fmtAgo(snapshot)}{changeCount > 0 ? ` · ${changeCount} pending` : ''}
+              </span>
+              <button onClick={commit} style={{
+                fontSize: '10px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer',
+                background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)',
+                color: '#a5b4fc',
+              }}>save</button>
             </div>
           </div>
         )}

@@ -74,7 +74,7 @@ function DashboardContent({ theme, setTheme, onMenuOpen }: { theme: Theme; setTh
           </Panel>
 
           <Panel title="Live Data Flow" icon={<Zap className="w-3 h-3" />}
-            action={<span className="text-[10px] font-mono" style={{ color: 'var(--neo-muted)' }}>stream · 1.4s</span>}>
+            action={<span className="text-[10px] font-mono" style={{ color: 'var(--neo-muted)' }}>stream · 1s</span>}>
             <DataFlow />
           </Panel>
         </div>
@@ -99,23 +99,31 @@ function DashboardContent({ theme, setTheme, onMenuOpen }: { theme: Theme; setTh
 function GraphifyView({ onMenuOpen }: { onMenuOpen: () => void }) {
   const [tab, setTab] = useState<Tab>('topology');
   const [selected, setSelected] = useState<GraphNode | null>(null);
+  const [rateIn, setRateIn] = useState(0);
+  const [rateOut, setRateOut] = useState(0);
   const handleSelect = useCallback((n: GraphNode | null) => setSelected(n), []);
+  const handleRate = useCallback((ri: number, ro: number) => { setRateIn(ri); setRateOut(ro); }, []);
 
   return (
     <div className="neo-page-padding">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--neo-text)', margin: 0 }}>Graphify</h1>
           <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>Live knowledge graph topology</p>
         </div>
-        <span style={{
-          fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '20px',
-          background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)',
-          display: 'flex', alignItems: 'center', gap: '6px',
-        }}>
-          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
-          LIVE
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--neo-muted)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--neo-border)' }}>
+            ↓ {rateIn}/s · ↑ {rateOut}/s
+          </span>
+          <span style={{
+            fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '20px',
+            background: 'rgba(16,185,129,0.12)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)',
+            display: 'flex', alignItems: 'center', gap: '6px',
+          }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', animation: 'pulse 1.5s infinite' }} />
+            LIVE
+          </span>
+        </div>
       </div>
       <Panel>
         <div className="flex border-b px-2 pt-2 gap-1" style={{ borderColor: 'var(--neo-border)' }}>
@@ -142,6 +150,12 @@ function GraphifyView({ onMenuOpen }: { onMenuOpen: () => void }) {
           {tab === 'topology' && selected && <NodeDetail node={selected} onClose={() => setSelected(null)} />}
         </AnimatePresence>
       </Panel>
+      <div style={{ marginTop: '16px' }}>
+        <Panel title="Live Data Flow" icon={<Zap className="w-3 h-3" />}
+          action={<span className="text-[10px] font-mono" style={{ color: 'var(--neo-muted)' }}>↓ {rateIn}/s · ↑ {rateOut}/s</span>}>
+          <DataFlow onRate={handleRate} />
+        </Panel>
+      </div>
     </div>
   );
 }
