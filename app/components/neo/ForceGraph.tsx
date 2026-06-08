@@ -69,24 +69,67 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
       ctx.strokeStyle = 'rgba(99,102,241,0.05)'; ctx.lineWidth = 1;
       for (let x = 0; x < s.w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s.h); ctx.stroke(); }
       for (let y = 0; y < s.h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(s.w, y); ctx.stroke(); }
+      // Compute node degrees for god-node detection (Graphify pattern)
+      const degree: Record<string, number> = {};
+      for (const l of graph.links) {
+        degree[l.source] = (degree[l.source] ?? 0) + 1;
+        degree[l.target] = (degree[l.target] ?? 0) + 1;
+      }
+      // BFS shortest path from selectedId to hover (Graphify path-highlight pattern)
+      const pathEdges = new Set<string>();
+      if (selectedId && hover && selectedId !== hover) {
+        const adj: Record<string, string[]> = {};
+        for (const l of graph.links) {
+          (adj[l.source] ??= []).push(l.target);
+          (adj[l.target] ??= []).push(l.source);
+        }
+        const prev: Record<string, string> = {};
+        const q = [selectedId];
+        const visited = new Set([selectedId]);
+        outer: while (q.length) {
+          const cur = q.shift()!;
+          for (const nb of (adj[cur] ?? [])) {
+            if (!visited.has(nb)) { visited.add(nb); prev[nb] = cur; q.push(nb); if (nb === hover) break outer; }
+          }
+        }
+        let cur = hover;
+        while (prev[cur]) { pathEdges.add(`${prev[cur]}-${cur}`); pathEdges.add(`${cur}-${prev[cur]}`); cur = prev[cur]; }
+      }
       for (const l of graph.links) {
         const a = nodes.find(n => n.id === l.source)!, b = nodes.find(n => n.id === l.target)!;
         const high = hover != null && (l.source === hover || l.target === hover);
-        ctx.strokeStyle = high ? 'rgba(99,102,241,0.7)' : 'rgba(148,163,184,0.18)';
-        ctx.lineWidth = high ? 1.5 : 0.6 + l.strength * 0.6;
+        const onPath = pathEdges.has(`${l.source}-${l.target}`);
+        // Edge type classification (Graphify EXTRACTED/INFERRED/AMBIGUOUS pattern)
+        const edgeType = l.strength >= 0.85 ? 'EXTRACTED' : l.strength >= 0.65 ? 'INFERRED' : 'AMBIGUOUS';
+        ctx.setLineDash(edgeType === 'EXTRACTED' ? [] : edgeType === 'INFERRED' ? [6, 3] : [2, 4]);
+        ctx.strokeStyle = onPath ? 'rgba(34,211,238,0.9)' : high ? 'rgba(99,102,241,0.8)'
+          : edgeType === 'EXTRACTED' ? 'rgba(148,163,184,0.35)'
+          : edgeType === 'INFERRED' ? 'rgba(148,163,184,0.20)'
+          : 'rgba(148,163,184,0.10)';
+        ctx.lineWidth = onPath ? 2 : high ? 1.5 : 0.6 + l.strength * 0.6;
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        ctx.setLineDash([]);
         const t = ((Date.now() / 1000) * (0.15 + l.strength * 0.25)) % 1;
         const px = a.x + (b.x - a.x) * t, py = a.y + (b.y - a.y) * t;
-        ctx.fillStyle = high ? '#22d3ee' : 'rgba(99,102,241,0.6)';
-        ctx.beginPath(); ctx.arc(px, py, high ? 2.5 : 1.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = onPath ? '#22d3ee' : high ? '#22d3ee' : 'rgba(99,102,241,0.6)';
+        ctx.beginPath(); ctx.arc(px, py, onPath ? 3 : high ? 2.5 : 1.5, 0, Math.PI * 2); ctx.fill();
       }
       for (const n of nodes) {
-        const r = 12 + Math.log10(n.size + 1) * 3;
+        const isGodNode = (degree[n.id] ?? 0) >= 3;
+        const r = 12 + Math.log10(n.size + 1) * 3 + (isGodNode ? 3 : 0);
         const isHover = hover === n.id, isSel = selectedId === n.id;
         if (isHover || isSel) {
           const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r * 3);
           g.addColorStop(0, TYPE_COLOR[n.type] + '80'); g.addColorStop(1, 'transparent');
           ctx.fillStyle = g; ctx.beginPath(); ctx.arc(n.x, n.y, r * 3, 0, Math.PI * 2); ctx.fill();
+        }
+        // God node extra outer glow ring (Graphify pattern)
+        if (isGodNode) {
+          ctx.strokeStyle = TYPE_COLOR[n.type] + '55';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath(); ctx.arc(n.x, n.y, r + 6, 0, Math.PI * 2); ctx.stroke();
+          ctx.setLineDash([]);
         }
         ctx.fillStyle = TYPE_COLOR[n.type];
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.fill();
@@ -156,6 +199,11 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
             <span className="uppercase tracking-wider">{k}</span>
           </div>
         ))}
+      </div>
+      <div className="absolute bottom-3 left-3 flex gap-3 text-[10px]" style={{ color: 'var(--neo-muted)' }}>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '16px', height: '1px', background: 'rgba(148,163,184,0.6)' }} /><span>extracted</span></div>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '16px', height: '1px', borderTop: '1px dashed rgba(148,163,184,0.5)' }} /><span>inferred</span></div>
+        <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '16px', height: '1px', borderTop: '1px dotted rgba(148,163,184,0.4)' }} /><span>ambiguous</span></div>
       </div>
       <div className="absolute bottom-3 right-3 text-[10px] font-mono" style={{ color: 'var(--neo-faint)' }}>scroll · zoom · drag · click</div>
     </div>

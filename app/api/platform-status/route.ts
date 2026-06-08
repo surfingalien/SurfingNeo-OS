@@ -19,13 +19,34 @@ async function checkEndpoint(url: string, timeoutMs = 6000) {
   }
 }
 
+// OpenBB cascade pattern: retry with exponential backoff, then cascade to alternate endpoint
+async function checkWithRetry(url: string, timeoutMs = 6000, maxAttempts = 3) {
+  let attempts = 0;
+  const delays = [2000, 4000, 8000];
+  while (attempts < maxAttempts) {
+    const result = await checkEndpoint(url, timeoutMs);
+    if (result.ok) return { ...result, attempts: attempts + 1, fallback: false };
+    attempts++;
+    if (attempts < maxAttempts) await new Promise(r => setTimeout(r, delays[attempts - 1]));
+  }
+  return { ok: false, latencyMs: null, statusCode: null, data: null, attempts, fallback: false };
+}
+
+async function checkWithCascade(primary: string, alternate: string, timeoutMs = 6000) {
+  const result = await checkEndpoint(primary, timeoutMs);
+  if (result.ok) return { ...result, attempts: 1, fallback: false };
+  // Cascade to alternate endpoint (OpenBB provider fallback pattern)
+  const fallbackResult = await checkEndpoint(alternate, timeoutMs);
+  return { ...fallbackResult, attempts: 2, fallback: true };
+}
+
 export async function GET() {
   const FS = 'https://finsurfing-production.up.railway.app';
   const PE = 'https://prompt-engineering-production-67f2.up.railway.app';
 
   const [fsHealth, peHealth] = await Promise.all([
-    checkEndpoint(`${FS}/health`),
-    checkEndpoint(`${PE}/`, 5000),
+    checkWithCascade(`${FS}/health`, `${FS}/api/health`, 6000),
+    checkWithRetry(`${PE}/`, 5000, 2),
   ]);
 
   let agenticStats: unknown = null;
@@ -48,12 +69,16 @@ export async function GET() {
         latencyMs: fsHealth.latencyMs,
         statusCode: fsHealth.statusCode,
         health: fsHealth.data,
+        attempts: fsHealth.attempts,
+        fallback: fsHealth.fallback,
       },
       promptEng: {
         url: PE,
         ok: peHealth.ok,
         latencyMs: peHealth.latencyMs,
         statusCode: peHealth.statusCode,
+        attempts: peHealth.attempts,
+        fallback: peHealth.fallback,
       },
     },
     agenticStats,
