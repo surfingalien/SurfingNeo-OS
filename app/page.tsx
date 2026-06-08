@@ -159,11 +159,6 @@ function DashboardInner() {
               <TabButton active={tab === 'topology'} onClick={() => setTab('topology')} label="🔗 Connection Topology" />
               <TabButton active={tab === 'platforms'} onClick={() => setTab('platforms')} label="🌊 Platform Mesh" />
               <TabButton active={tab === 'trajectory'} onClick={() => setTab('trajectory')} label="📈 30-Day Trajectory" />
-              {graph.warning && (
-                <span style={{ marginLeft: 'auto', fontSize: '10px', color: t.warning + '88', padding: '3px 8px', background: t.warning + '11', borderRadius: '8px', border: `1px solid ${t.warning}22` }}>
-                  ⚠ {graph.warning.split('—')[0].trim()}
-                </span>
-              )}
             </div>
 
             {tab === 'topology' && (
