@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { graph, type GraphNode } from '@/lib/neo-mock';
+import { graph, type GraphNode, type GraphLink } from '@/lib/neo-mock';
 
 const TYPE_COLOR: Record<GraphNode['type'], string> = {
   core: '#6366f1', brain: '#22d3ee', platform: '#10b981', site: '#f59e0b', memory: '#a78bfa',
@@ -12,20 +12,46 @@ const STATUS_RING: Record<GraphNode['status'], string> = {
   healthy: '#10b981', degraded: '#f59e0b', offline: '#ef4444',
 };
 
+type LiveNode = GraphNode & { x: number; y: number; vx: number; vy: number };
+
 export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode | null) => void; selectedId: string | null }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const [source, setSource] = useState<'live' | 'fallback'>('fallback');
+  const linksRef = useRef<GraphLink[]>(graph.links);
   const stateRef = useRef({
     nodes: graph.nodes.map((n, i) => ({
       ...n,
       x: 400 + Math.cos((i / graph.nodes.length) * Math.PI * 2) * 180,
       y: 220 + Math.sin((i / graph.nodes.length) * Math.PI * 2) * 140,
       vx: 0, vy: 0,
-    })),
+    })) as LiveNode[],
     drag: null as null | { id: string; offX: number; offY: number },
     zoom: 1, panX: 0, panY: 0, w: 800, h: 460,
   });
+
+  // Poll /api/graph every 5s to update node statuses + link strengths
+  useEffect(() => {
+    const refresh = async () => {
+      try {
+        const res = await fetch('/api/graph', { next: { revalidate: 0 } });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.nodes?.length) {
+          stateRef.current.nodes = stateRef.current.nodes.map(existing => {
+            const updated = data.nodes.find((n: GraphNode) => n.id === existing.id);
+            return updated ? { ...existing, status: updated.status, size: updated.size ?? existing.size } : existing;
+          });
+          setSource(data.source === 'graphify-live' ? 'live' : 'fallback');
+        }
+        if (data.links?.length) linksRef.current = data.links;
+      } catch { /* keep existing data */ }
+    };
+    refresh();
+    const id = setInterval(refresh, 5000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const c = canvasRef.current!, ctx = c.getContext('2d')!;
@@ -53,8 +79,9 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
         const f = 1800 / d2, d = Math.sqrt(d2), fx = (dx / d) * f, fy = (dy / d) * f;
         a.vx -= fx; a.vy -= fy; b.vx += fx; b.vy += fy;
       }
-      for (const l of graph.links) {
+      for (const l of linksRef.current) {
         const a = nodes.find(n => n.id === l.source)!, b = nodes.find(n => n.id === l.target)!;
+        if (!a || !b) continue;
         const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
         const f = (d - 140) * 0.01 * l.strength, fx = (dx / d) * f, fy = (dy / d) * f;
         a.vx += fx; a.vy += fy; b.vx -= fx; b.vy -= fy;
@@ -70,8 +97,10 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
       for (let x = 0; x < s.w; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s.h); ctx.stroke(); }
       for (let y = 0; y < s.h; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(s.w, y); ctx.stroke(); }
       // Compute node degrees for god-node detection (Graphify pattern)
+      const links = linksRef.current;
+      const maxTraffic = Math.max(...links.map(l => l.traffic ?? 1), 1);
       const degree: Record<string, number> = {};
-      for (const l of graph.links) {
+      for (const l of links) {
         degree[l.source] = (degree[l.source] ?? 0) + 1;
         degree[l.target] = (degree[l.target] ?? 0) + 1;
       }
@@ -79,7 +108,7 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
       const pathEdges = new Set<string>();
       if (selectedId && hover && selectedId !== hover) {
         const adj: Record<string, string[]> = {};
-        for (const l of graph.links) {
+        for (const l of links) {
           (adj[l.source] ??= []).push(l.target);
           (adj[l.target] ??= []).push(l.source);
         }
@@ -95,8 +124,9 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
         let cur = hover;
         while (prev[cur]) { pathEdges.add(`${prev[cur]}-${cur}`); pathEdges.add(`${cur}-${prev[cur]}`); cur = prev[cur]; }
       }
-      for (const l of graph.links) {
+      for (const l of links) {
         const a = nodes.find(n => n.id === l.source)!, b = nodes.find(n => n.id === l.target)!;
+        if (!a || !b) continue;
         const high = hover != null && (l.source === hover || l.target === hover);
         const onPath = pathEdges.has(`${l.source}-${l.target}`);
         // Edge type classification (Graphify EXTRACTED/INFERRED/AMBIGUOUS pattern)
@@ -109,10 +139,16 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
         ctx.lineWidth = onPath ? 2 : high ? 1.5 : 0.6 + l.strength * 0.6;
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
         ctx.setLineDash([]);
-        const t = ((Date.now() / 1000) * (0.15 + l.strength * 0.25)) % 1;
-        const px = a.x + (b.x - a.x) * t, py = a.y + (b.y - a.y) * t;
-        ctx.fillStyle = onPath ? '#22d3ee' : high ? '#22d3ee' : 'rgba(99,102,241,0.6)';
-        ctx.beginPath(); ctx.arc(px, py, onPath ? 3 : high ? 2.5 : 1.5, 0, Math.PI * 2); ctx.fill();
+        // Traffic-based multi-particle flow: higher traffic = more particles per edge
+        const particleCount = 1 + Math.round(((l.traffic ?? 0) / maxTraffic) * 3);
+        const speed = 0.15 + l.strength * 0.25;
+        for (let p = 0; p < particleCount; p++) {
+          const offset = p / particleCount;
+          const t = ((Date.now() / 1000) * speed + offset) % 1;
+          const px = a.x + (b.x - a.x) * t, py = a.y + (b.y - a.y) * t;
+          ctx.fillStyle = onPath ? '#22d3ee' : high ? '#22d3ee' : 'rgba(99,102,241,0.6)';
+          ctx.beginPath(); ctx.arc(px, py, onPath ? 3 : high ? 2.5 : 1.5, 0, Math.PI * 2); ctx.fill();
+        }
       }
       for (const n of nodes) {
         const isGodNode = (degree[n.id] ?? 0) >= 3;
@@ -205,7 +241,12 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
         <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '16px', height: '1px', borderTop: '1px dashed rgba(148,163,184,0.5)' }} /><span>inferred</span></div>
         <div className="flex items-center gap-1"><span style={{ display: 'inline-block', width: '16px', height: '1px', borderTop: '1px dotted rgba(148,163,184,0.4)' }} /><span>ambiguous</span></div>
       </div>
-      <div className="absolute bottom-3 right-3 text-[10px] font-mono" style={{ color: 'var(--neo-faint)' }}>scroll · zoom · drag · click</div>
+      <div className="absolute bottom-3 right-3 flex items-center gap-3 text-[10px] font-mono" style={{ color: 'var(--neo-faint)' }}>
+        <span style={{ color: source === 'live' ? '#10b981' : 'var(--neo-faint)' }}>
+          {source === 'live' ? '● live' : '○ fallback'}
+        </span>
+        <span>scroll · zoom · drag · click</span>
+      </div>
     </div>
   );
 }
