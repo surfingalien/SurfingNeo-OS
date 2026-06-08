@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
-import { createHash } from 'crypto';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
@@ -49,10 +48,10 @@ export async function verifyAuth(req: NextRequest): Promise<AuthContext | null> 
 }
 
 function timingSafeCompare(a: string, b: string): boolean {
-  const bufA = Buffer.from(a), bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) return false;
-  return createHash('sha256').update(bufA).digest('hex') === 
-         createHash('sha256').update(bufB).digest('hex');
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
 }
 
 export function withAuth(
