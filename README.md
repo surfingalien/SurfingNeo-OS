@@ -8,14 +8,6 @@ Real-time visualization dashboard for the SurfingNeo-OS agentic network — conn
 ![Connection Topology](docs/screenshots/topology.png)
 *Interactive force-directed graph — hover to highlight, click to inspect, drag to reposition, scroll to zoom. Animated traffic particles show live data flow across links.*
 
-### Platform Mesh
-![Platform Mesh](docs/screenshots/platform-mesh.png)
-*Health scores, latency, request counts, and top endpoints for FinSurfing, Prompt Engineering, Graphify, and MCP — with integration link traffic rates.*
-
-### 30-Day Trajectory
-![30-Day Trajectory](docs/screenshots/trajectory.png)
-*Toggleable time-series chart of Knowledge Base growth, API requests, insights generated, and Brain Score — with interactive hover tooltip.*
-
 ## What It Does
 
 SurfingNeo-OS provides a single-pane view of how every node in your agentic ecosystem connects, the health of each component, and live progress metrics — all updating in real time.
