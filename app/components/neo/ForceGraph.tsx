@@ -5,6 +5,9 @@ import { graph, type GraphNode } from '@/lib/neo-mock';
 const TYPE_COLOR: Record<GraphNode['type'], string> = {
   core: '#6366f1', brain: '#22d3ee', platform: '#10b981', site: '#f59e0b', memory: '#a78bfa',
 };
+const TYPE_EMOJI: Record<GraphNode['type'], string> = {
+  core: '⚡', brain: '🧠', platform: '⚙️', site: '🌐', memory: '🔲',
+};
 const STATUS_RING: Record<GraphNode['status'], string> = {
   healthy: '#10b981', degraded: '#f59e0b', offline: '#ef4444',
 };
@@ -88,7 +91,15 @@ export function ForceGraph({ onSelect, selectedId }: { onSelect: (n: GraphNode |
         ctx.fillStyle = TYPE_COLOR[n.type];
         ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = STATUS_RING[n.status]; ctx.lineWidth = isSel ? 3 : 1.5; ctx.stroke();
-        ctx.fillStyle = '#f1f5f9'; ctx.font = '11px Inter, sans-serif'; ctx.textAlign = 'center';
+        // emoji icon centred inside node
+        const emojiSize = Math.round(r * 1.1);
+        ctx.font = `${emojiSize}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(TYPE_EMOJI[n.type], n.x, n.y);
+        // label below
+        ctx.fillStyle = '#f1f5f9'; ctx.font = '11px Inter, sans-serif';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillText(n.label, n.x, n.y + r + 14);
       }
       ctx.restore();
