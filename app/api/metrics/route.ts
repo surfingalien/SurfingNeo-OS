@@ -65,13 +65,23 @@ export const GET = async (req: NextRequest) => {
       knowledgeGraph: { score: graphifyMetrics?.improvement?.knowledgeGraph?.score || 91, trend: graphifyMetrics?.improvement?.knowledgeGraph?.trend || +1.8, label: graphifyMetrics?.improvement?.knowledgeGraph?.label || 'Stable Growth' },
       overall: { score: graphifyMetrics?.improvement?.overall?.score || 87, trend: graphifyMetrics?.improvement?.overall?.trend || +3.4, label: graphifyMetrics?.improvement?.overall?.label || 'Strong' },
     },
-    history: graphifyMetrics?.history || Array.from({ length: 30 }, (_, i) => ({
+    // Normalize Graphify's `insightsGenerated` field to `insights` expected by ImprovementChart
+    history: graphifyMetrics?.history
+      ? graphifyMetrics.history.map((d: any) => ({
+          date: d.date,
+          knowledgeNodes: d.knowledgeNodes,
+          apiRequests: d.apiRequests,
+          insights: d.insightsGenerated ?? d.insights ?? 0,
+          brainScore: d.brainScore,
+        }))
+      : Array.from({ length: 30 }, (_, i) => ({
       date: new Date(now - (29 - i) * 86400000).toISOString().split('T')[0],
       knowledgeNodes: 2400 + i * 15 + Math.floor(Math.random() * 10),
       apiRequests: 1200 + i * 45 + Math.floor(Math.random() * 200),
       insights: 40 + i * 2 + Math.floor(Math.random() * 8),
       brainScore: 70 + i * 0.6 + Math.random() * 2,
     })),
+
   };
 
   return NextResponse.json(metrics);
