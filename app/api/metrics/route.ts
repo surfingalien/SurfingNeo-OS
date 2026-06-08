@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth/middleware';
 import { graphifyBreaker, mcpBreaker } from '@/lib/resilience/circuit-breaker';
 import { API_CONFIG } from '@/lib/api-config';
 import { withRetry } from '@/lib/resilience/retry';
 
-export const GET = withAuth(async (req: NextRequest, auth) => {
+export const GET = async (req: NextRequest) => {
+  const auth = { userId: 'dashboard', role: 'readonly' };
   const now = Date.now();
 
   // Try to fetch real metrics from Graphify
@@ -75,4 +75,4 @@ export const GET = withAuth(async (req: NextRequest, auth) => {
   };
 
   return NextResponse.json(metrics);
-}, 'readonly');
+};

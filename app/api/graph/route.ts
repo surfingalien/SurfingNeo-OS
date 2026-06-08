@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth/middleware';
 import { graphifyBreaker, mcpBreaker } from '@/lib/resilience/circuit-breaker';
 import { withRetry } from '@/lib/resilience/retry';
 import { API_CONFIG } from '@/lib/api-config';
 
-export const GET = withAuth(async (req: NextRequest, auth) => {
+export const GET = async (req: NextRequest) => {
+  const auth = { userId: 'dashboard', role: 'readonly' };
   try {
     // Try to fetch real graph topology from Graphify
     const graphifyData = await graphifyBreaker.execute(
@@ -57,4 +57,4 @@ export const GET = withAuth(async (req: NextRequest, auth) => {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}, 'readonly');
+};

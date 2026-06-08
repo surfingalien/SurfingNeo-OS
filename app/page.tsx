@@ -77,22 +77,27 @@ export default function Dashboard() {
   useEffect(() => {
     loadAll();
 
-    // SSE for real-time connection log
-    const es = new EventSource('/api/stream?projectId=agentic-os');
-    esRef.current = es;
-    es.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      if (data.type !== 'connected') {
-        setLogs(prev => [{
-          id: crypto.randomUUID(),
-          time: new Date().toLocaleTimeString(),
-          type: data.type,
-          source: data.siteName || data.source || 'system',
-          message: data.eventType || data.query || data.message || 'update',
-          status: data.graphifyStatus || data.status || 'success',
-        }, ...prev].slice(0, 60));
-      }
-    };
+    // SSE for real-time connection log (best-effort — requires auth)
+    try {
+      const es = new EventSource('/api/stream?projectId=agentic-os');
+      esRef.current = es;
+      es.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type !== 'connected') {
+            setLogs(prev => [{
+              id: crypto.randomUUID(),
+              time: new Date().toLocaleTimeString(),
+              type: data.type,
+              source: data.siteName || data.source || 'system',
+              message: data.eventType || data.query || data.message || 'update',
+              status: data.graphifyStatus || data.status || 'success',
+            }, ...prev].slice(0, 60));
+          }
+        } catch { /* ignore parse errors */ }
+      };
+      es.onerror = () => es.close();
+    } catch { /* SSE not available */ }
 
     // Poll health + metrics every 10s
     const interval = setInterval(async () => {
@@ -105,7 +110,7 @@ export default function Dashboard() {
       setLastUpdated(new Date());
     }, 10000);
 
-    return () => { es.close(); clearInterval(interval); };
+    return () => { esRef.current?.close(); clearInterval(interval); };
   }, []);
 
   const handleNodeClick = useCallback((node: any) => setSelectedNode(node), []);
