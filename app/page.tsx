@@ -98,7 +98,7 @@ function DashboardInner() {
   useEffect(() => {
     loadAll();
     try {
-      const es = new EventSource('/api/stream?projectId=agentic-os');
+      const es = new EventSource('/api/stream?projectId=public');
       esRef.current = es;
       es.onmessage = (e) => {
         try {

@@ -32,7 +32,10 @@ export async function POST(req: NextRequest) {
     );
 
     enriched._meta.processingTime = Date.now() - startTime;
-    sseManager.broadcastToProject(data.projectId || 'default', { type: 'webhook_ingested', eventType, siteName, graphifyStatus: graphifyResult.queued ? 'queued' : 'ingested', data: enriched });
+    const projectId = data.projectId || 'default';
+    const eventPayload = { type: 'webhook_ingested', eventType, siteName, graphifyStatus: graphifyResult.queued ? 'queued' : 'ingested', data: enriched };
+    sseManager.broadcastToProject(projectId, eventPayload);
+    sseManager.broadcastToProject('public', eventPayload);
 
     if (['error', 'deploy', 'critical'].includes(eventType)) {
       fetch(`${process.env.VERCEL_URL}/api/mcp/invoke`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.INTERNAL_API_KEY! },
