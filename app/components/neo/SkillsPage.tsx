@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { skills } from '@/lib/neo-mock';
+import { skills as fallbackSkills } from '@/lib/neo-mock';
 
 const SKILL_ICONS: Record<string, string> = {
   'market-scanner': '🔭', 'symbol-analyzer': '📊', 'advisory-engine': '🎯',
@@ -26,24 +26,48 @@ const TAG_COLORS: Record<string, string> = {
   optimize: '#6366f1', prompts: '#22d3ee', cot: '#10b981',
 };
 
+type Skill = typeof fallbackSkills[number];
 type FilterSource = 'all' | 'finsurfing' | 'prompt-eng';
+type RegistryMeta = { lastSynced: string; fsSkillsSource: 'live' | 'fallback'; peSkillsSource: 'live' | 'fallback'; skillCount: number };
+
+const POLL_INTERVAL = 30_000;
 
 export function SkillsPage() {
-  const [filter, setFilter] = useState<FilterSource>('all');
+  const [skills, setSkills] = useState<Skill[]>(fallbackSkills);
+  const [meta, setMeta] = useState<RegistryMeta | null>(null);
   const [platformStatus, setPlatformStatus] = useState<{ finsurfing: boolean; promptEng: boolean } | null>(null);
+  const [filter, setFilter] = useState<FilterSource>('all');
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/platform-status')
-      .then(r => r.json())
-      .then(d => setPlatformStatus({
-        finsurfing: d.platforms?.finsurfing?.ok ?? false,
-        promptEng: d.platforms?.promptEng?.ok ?? false,
-      }))
-      .catch(() => {});
+  const sync = useCallback(async () => {
+    try {
+      const [regRes, statusRes] = await Promise.all([
+        fetch('/api/registry?type=skills'),
+        fetch('/api/platform-status'),
+      ]);
+      if (regRes.ok) {
+        const d = await regRes.json();
+        if (d.skills?.length) setSkills(d.skills);
+        setMeta(d.meta ?? null);
+      }
+      if (statusRes.ok) {
+        const d = await statusRes.json();
+        setPlatformStatus({
+          finsurfing: d.platforms?.finsurfing?.ok ?? false,
+          promptEng: d.platforms?.promptEng?.ok ?? false,
+        });
+      }
+    } catch { /* keep existing state */ }
+    finally { setLoading(false); }
   }, []);
 
-  const filtered = filter === 'all' ? skills : skills.filter(s => s.source === filter);
+  useEffect(() => {
+    sync();
+    const id = setInterval(sync, POLL_INTERVAL);
+    return () => clearInterval(id);
+  }, [sync]);
 
+  const filtered = filter === 'all' ? skills : skills.filter(s => s.source === filter);
   const fsCount = skills.filter(s => s.source === 'finsurfing').length;
   const peCount = skills.filter(s => s.source === 'prompt-eng').length;
 
@@ -55,26 +79,37 @@ export function SkillsPage() {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--neo-text)', margin: 0 }}>Skills Registry</h1>
           <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>AI capabilities from FinSurfing + PromptForge</p>
         </div>
-        {platformStatus && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{
-              fontSize: '11px', padding: '4px 10px', borderRadius: '20px',
-              background: platformStatus.finsurfing ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-              color: platformStatus.finsurfing ? '#10b981' : '#ef4444',
-              border: `1px solid ${platformStatus.finsurfing ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-            }}>
-              {platformStatus.finsurfing ? '● FinSurfing live' : '○ FinSurfing down'}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {platformStatus && (
+            <>
+              <span style={{
+                fontSize: '11px', padding: '4px 10px', borderRadius: '20px',
+                background: platformStatus.finsurfing ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                color: platformStatus.finsurfing ? '#10b981' : '#ef4444',
+                border: `1px solid ${platformStatus.finsurfing ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              }}>
+                {platformStatus.finsurfing ? '● FinSurfing live' : '○ FinSurfing down'}
+              </span>
+              <span style={{
+                fontSize: '11px', padding: '4px 10px', borderRadius: '20px',
+                background: platformStatus.promptEng ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                color: platformStatus.promptEng ? '#10b981' : '#ef4444',
+                border: `1px solid ${platformStatus.promptEng ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              }}>
+                {platformStatus.promptEng ? '● PromptForge live' : '○ PromptForge down'}
+              </span>
+            </>
+          )}
+          {meta && (
+            <span style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--neo-faint)' }}>
+              {(meta.fsSkillsSource === 'live' || meta.peSkillsSource === 'live') ? '● live' : '○ cached'}
+              {' · '}{meta.skillCount} skills · {new Date(meta.lastSynced).toLocaleTimeString()}
             </span>
-            <span style={{
-              fontSize: '11px', padding: '4px 10px', borderRadius: '20px',
-              background: platformStatus.promptEng ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-              color: platformStatus.promptEng ? '#10b981' : '#ef4444',
-              border: `1px solid ${platformStatus.promptEng ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-            }}>
-              {platformStatus.promptEng ? '● PromptForge live' : '○ PromptForge down'}
-            </span>
-          </div>
-        )}
+          )}
+          <button onClick={sync} style={{ fontSize: '11px', padding: '4px 10px', borderRadius: '8px', background: 'var(--neo-surface)', color: 'var(--neo-text)', border: '1px solid var(--neo-border)', cursor: 'pointer' }}>
+            ⟳ Sync
+          </button>
+        </div>
       </div>
 
       {/* Filter tabs */}
@@ -89,8 +124,7 @@ export function SkillsPage() {
             onClick={() => setFilter(id)}
             style={{
               padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-              border: '1px solid',
-              cursor: 'pointer',
+              border: '1px solid', cursor: 'pointer',
               background: filter === id ? 'rgba(99,102,241,0.15)' : 'transparent',
               borderColor: filter === id ? 'rgba(99,102,241,0.5)' : 'var(--neo-border)',
               color: filter === id ? '#a5b4fc' : 'var(--neo-muted)',
@@ -98,6 +132,10 @@ export function SkillsPage() {
           >{label}</button>
         ))}
       </div>
+
+      {loading && skills.length === 0 && (
+        <div style={{ textAlign: 'center', color: 'var(--neo-muted)', padding: '40px', fontSize: '13px' }}>Syncing skills from FinSurfing + PromptForge…</div>
+      )}
 
       {/* Grid */}
       <div className="neo-card-grid">
@@ -107,13 +145,7 @@ export function SkillsPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: i * 0.04 }}
-            style={{
-              background: 'var(--neo-surface)',
-              border: '1px solid var(--neo-border)',
-              borderRadius: '12px',
-              padding: '16px',
-              cursor: 'pointer',
-            }}
+            style={{ background: 'var(--neo-surface)', border: '1px solid var(--neo-border)', borderRadius: '12px', padding: '16px', cursor: 'pointer' }}
             whileHover={{ borderColor: 'rgba(99,102,241,0.5)' }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '8px' }}>
@@ -148,9 +180,7 @@ export function SkillsPage() {
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--neo-faint)' }}>
-                {skill.runs.toLocaleString()} runs
-              </span>
+              <span style={{ fontSize: '11px', color: 'var(--neo-faint)' }}>{skill.runs.toLocaleString()} runs</span>
               <span style={{
                 fontSize: '10px', padding: '2px 7px', borderRadius: '6px',
                 background: skill.source === 'finsurfing' ? 'rgba(16,185,129,0.08)'

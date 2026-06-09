@@ -1,7 +1,7 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { mcpServers } from '@/lib/neo-mock';
+import { mcpServers as fallbackServers } from '@/lib/neo-mock';
 
 const SERVER_ICONS: Record<string, string> = {
   claude: '🧠', groq: '⚡', finnhub: '📈', fmp: '💹', fred: '🏛️',
@@ -9,46 +9,57 @@ const SERVER_ICONS: Record<string, string> = {
 };
 
 function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { bg: string; color: string; label: string }> = {
-    connected: { bg: 'rgba(16,185,129,0.15)', color: '#10b981', label: 'connected' },
-    conditional: { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', label: 'conditional' },
-    degraded: { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b', label: 'degraded' },
-    disconnected: { bg: 'rgba(239,68,68,0.15)', color: '#ef4444', label: 'disconnected' },
+  const map: Record<string, { bg: string; color: string }> = {
+    connected: { bg: 'rgba(16,185,129,0.15)', color: '#10b981' },
+    conditional: { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
+    degraded: { bg: 'rgba(245,158,11,0.15)', color: '#f59e0b' },
+    disconnected: { bg: 'rgba(239,68,68,0.15)', color: '#ef4444' },
   };
   const s = map[status] ?? map.disconnected;
   return (
-    <span style={{
-      fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '10px',
-      background: s.bg, color: s.color,
-    }}>{s.label}</span>
+    <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '10px', background: s.bg, color: s.color }}>
+      {status}
+    </span>
   );
 }
 
-interface PlatformStatus {
-  ok: boolean;
-  latencyMs: number | null;
-  checked: string;
-}
+type McpServer = typeof fallbackServers[number];
+type RegistryMeta = { lastSynced: string; mcpSource: 'live' | 'fallback'; mcpCount: number };
+
+const POLL_INTERVAL = 30_000;
 
 export function MCPServersPage() {
-  const [platformStatus, setPlatformStatus] = useState<PlatformStatus | null>(null);
+  const [servers, setServers] = useState<McpServer[]>(fallbackServers);
+  const [meta, setMeta] = useState<RegistryMeta | null>(null);
+  const [fsPing, setFsPing] = useState<{ ok: boolean; latencyMs: number | null } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch('/api/platform-status')
-      .then(r => r.json())
-      .then(d => {
-        setPlatformStatus({
-          ok: d.platforms?.finsurfing?.ok ?? false,
-          latencyMs: d.platforms?.finsurfing?.latencyMs,
-          checked: d.checked,
-        });
-      })
-      .catch(() => setPlatformStatus({ ok: false, latencyMs: null, checked: new Date().toISOString() }))
-      .finally(() => setLoading(false));
+  const sync = useCallback(async () => {
+    try {
+      const [regRes, statusRes] = await Promise.all([
+        fetch('/api/registry?type=mcps'),
+        fetch('/api/platform-status'),
+      ]);
+      if (regRes.ok) {
+        const d = await regRes.json();
+        if (d.mcps?.length) setServers(d.mcps);
+        setMeta(d.meta ?? null);
+      }
+      if (statusRes.ok) {
+        const d = await statusRes.json();
+        setFsPing({ ok: d.platforms?.finsurfing?.ok ?? false, latencyMs: d.platforms?.finsurfing?.latencyMs ?? null });
+      }
+    } catch { /* keep existing state */ }
+    finally { setLoading(false); }
   }, []);
 
-  const connected = mcpServers.filter(s => s.status === 'connected').length;
+  useEffect(() => {
+    sync();
+    const id = setInterval(sync, POLL_INTERVAL);
+    return () => clearInterval(id);
+  }, [sync]);
+
+  const connected = servers.filter(s => s.status === 'connected').length;
 
   return (
     <div className="neo-page-padding">
@@ -56,51 +67,46 @@ export function MCPServersPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--neo-text)', margin: 0 }}>MCP Servers</h1>
-          <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>Model Context Protocol data providers · FinSurfing</p>
+          <p style={{ fontSize: '13px', color: 'var(--neo-muted)', marginTop: '4px' }}>
+            Model Context Protocol providers · {servers.length} registered
+          </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          {/* Live platform health */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {/* Live FinSurfing health */}
           <div style={{
-            fontSize: '12px', padding: '6px 12px', borderRadius: '8px',
-            background: loading ? 'rgba(100,116,139,0.1)' : platformStatus?.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-            color: loading ? '#94a3b8' : platformStatus?.ok ? '#10b981' : '#ef4444',
-            border: `1px solid ${loading ? 'rgba(100,116,139,0.2)' : platformStatus?.ok ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
-            display: 'flex', alignItems: 'center', gap: '6px',
+            fontSize: '11px', padding: '5px 10px', borderRadius: '8px',
+            background: loading ? 'rgba(100,116,139,0.1)' : fsPing?.ok ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+            color: loading ? '#94a3b8' : fsPing?.ok ? '#10b981' : '#ef4444',
+            border: `1px solid ${loading ? 'rgba(100,116,139,0.2)' : fsPing?.ok ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
+            display: 'flex', alignItems: 'center', gap: '5px',
           }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-            {loading ? 'Checking...' : platformStatus?.ok
-              ? `FinSurfing live · ${platformStatus.latencyMs}ms`
-              : 'FinSurfing unreachable'}
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+            {loading ? 'Syncing...' : fsPing?.ok ? `FinSurfing · ${fsPing.latencyMs}ms` : 'FinSurfing unreachable'}
           </div>
-          <span style={{
-            fontSize: '12px', padding: '6px 12px', borderRadius: '8px',
-            background: 'rgba(16,185,129,0.1)', color: '#10b981',
-            border: '1px solid rgba(16,185,129,0.25)',
-          }}>
-            {connected} / {mcpServers.length} active
+          {/* Registry source indicator */}
+          {meta && (
+            <span style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--neo-faint)' }}>
+              {meta.mcpSource === 'live' ? '● live' : '○ cached'} · synced {new Date(meta.lastSynced).toLocaleTimeString()}
+            </span>
+          )}
+          <span style={{ fontSize: '11px', padding: '5px 10px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.25)' }}>
+            {connected}/{servers.length} active
           </span>
-          <button style={{
-            fontSize: '13px', fontWeight: 600, padding: '7px 14px', borderRadius: '8px',
-            background: 'var(--neo-primary)', color: '#fff', border: 'none', cursor: 'pointer',
-          }}>+ Add Server</button>
+          <button onClick={sync} style={{ fontSize: '12px', fontWeight: 600, padding: '6px 12px', borderRadius: '8px', background: 'var(--neo-surface)', color: 'var(--neo-text)', border: '1px solid var(--neo-border)', cursor: 'pointer' }}>
+            ⟳ Sync
+          </button>
         </div>
       </div>
 
       {/* Grid */}
       <div className="neo-card-grid">
-        {mcpServers.map((server, i) => (
+        {servers.map((server, i) => (
           <motion.div
             key={server.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: i * 0.04 }}
-            style={{
-              background: 'var(--neo-surface)',
-              border: '1px solid var(--neo-border)',
-              borderRadius: '12px',
-              padding: '16px',
-              cursor: 'pointer',
-            }}
+            transition={{ duration: 0.25, delay: i * 0.03 }}
+            style={{ background: 'var(--neo-surface)', border: '1px solid var(--neo-border)', borderRadius: '12px', padding: '16px', cursor: 'pointer' }}
             whileHover={{ borderColor: server.color }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', marginBottom: '10px' }}>
