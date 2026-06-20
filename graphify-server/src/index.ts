@@ -171,6 +171,233 @@ app.get('/graph/node/:id', authenticate, (req, res) => {
   res.json({ node, connections: { links: connectedLinks, nodes: connectedNodes, count: connectedLinks.length }, timestamp: new Date().toISOString() });
 });
 
+// BFS traversal from a starting node (inspired by codegraph traversal algorithms)
+app.get('/graph/traverse', authenticate, (req, res) => {
+  const startId = req.query.start as string;
+  const maxDepth = Math.min(parseInt(req.query.maxDepth as string) || 3, 6);
+  const direction = (req.query.direction as string) || 'both'; // outgoing | incoming | both
+  const algorithm = (req.query.algorithm as string) || 'bfs'; // bfs | dfs
+
+  if (!startId || !nodes.has(startId)) {
+    return res.status(400).json({ error: 'Invalid start node id' });
+  }
+
+  const visitedNodes = new Map<string, { node: typeof nodes extends Map<string, infer V> ? V : never; depth: number }>();
+  const traversedLinks: KnowledgeLink[] = [];
+  const visited = new Set<string>();
+
+  const getNeighbors = (nodeId: string): { node: KnowledgeNode; link: KnowledgeLink }[] => {
+    const results: { node: KnowledgeNode; link: KnowledgeLink }[] = [];
+    for (const link of links.values()) {
+      if (direction === 'outgoing' || direction === 'both') {
+        if (link.source === nodeId) {
+          const target = nodes.get(link.target);
+          if (target) results.push({ node: target, link });
+        }
+      }
+      if (direction === 'incoming' || direction === 'both') {
+        if (link.target === nodeId) {
+          const source = nodes.get(link.source);
+          if (source) results.push({ node: source, link });
+        }
+      }
+    }
+    return results;
+  };
+
+  const startNode = nodes.get(startId)!;
+  if (algorithm === 'bfs') {
+    const queue: Array<{ id: string; depth: number }> = [{ id: startId, depth: 0 }];
+    visitedNodes.set(startId, { node: startNode, depth: 0 });
+    while (queue.length > 0) {
+      const { id, depth } = queue.shift()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      if (depth >= maxDepth) continue;
+      for (const { node: neighbor, link } of getNeighbors(id)) {
+        if (!visitedNodes.has(neighbor.id)) {
+          visitedNodes.set(neighbor.id, { node: neighbor, depth: depth + 1 });
+          queue.push({ id: neighbor.id, depth: depth + 1 });
+          traversedLinks.push(link);
+        }
+      }
+    }
+  } else {
+    // DFS
+    const stack: Array<{ id: string; depth: number }> = [{ id: startId, depth: 0 }];
+    visitedNodes.set(startId, { node: startNode, depth: 0 });
+    while (stack.length > 0) {
+      const { id, depth } = stack.pop()!;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      if (depth >= maxDepth) continue;
+      for (const { node: neighbor, link } of getNeighbors(id)) {
+        if (!visitedNodes.has(neighbor.id)) {
+          visitedNodes.set(neighbor.id, { node: neighbor, depth: depth + 1 });
+          stack.push({ id: neighbor.id, depth: depth + 1 });
+          traversedLinks.push(link);
+        }
+      }
+    }
+  }
+
+  res.json({
+    startId,
+    algorithm,
+    direction,
+    maxDepth,
+    nodes: Array.from(visitedNodes.entries()).map(([id, { node, depth }]) => ({ ...node, traversalDepth: depth })),
+    links: traversedLinks,
+    meta: { nodesVisited: visitedNodes.size, linksTraversed: traversedLinks.length, generatedAt: new Date().toISOString() },
+  });
+});
+
+// Relationship queries — callers, callees, dependencies, dead nodes, module deps
+// (query types mirror CodeGraphContext analyze_code_relationships)
+app.post('/graph/relationships', authenticate, (req, res) => {
+  const { query_type, node_id, limit = 20 } = req.body;
+  const validTypes = ['find_callers', 'find_callees', 'find_all_callers', 'find_all_callees', 'find_importers', 'dead_code', 'module_deps', 'find_complexity', 'class_hierarchy'];
+
+  if (!validTypes.includes(query_type)) {
+    return res.status(400).json({ error: `Invalid query_type. Must be one of: ${validTypes.join(', ')}` });
+  }
+
+  const nodeList = Array.from(nodes.values());
+  const linkList = Array.from(links.values());
+
+  let results: any[] = [];
+  let description = '';
+
+  switch (query_type) {
+    case 'find_callers': {
+      // Nodes that have outgoing links TO node_id
+      const callerLinks = linkList.filter(l => l.target === node_id);
+      results = callerLinks.map(l => {
+        const caller = nodes.get(l.source);
+        return caller ? { node: caller, link: l, relationship: 'calls' } : null;
+      }).filter(Boolean);
+      description = `Nodes that call or depend on "${nodes.get(node_id)?.label ?? node_id}"`;
+      break;
+    }
+    case 'find_callees': {
+      // Nodes that node_id links OUT to
+      const calleeLinks = linkList.filter(l => l.source === node_id);
+      results = calleeLinks.map(l => {
+        const callee = nodes.get(l.target);
+        return callee ? { node: callee, link: l, relationship: 'called_by' } : null;
+      }).filter(Boolean);
+      description = `Nodes called or depended on by "${nodes.get(node_id)?.label ?? node_id}"`;
+      break;
+    }
+    case 'find_all_callers': {
+      // BFS backwards to find all transitive callers
+      const visited = new Set<string>([node_id]);
+      const queue = [node_id];
+      const callerNodes: any[] = [];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        const inLinks = linkList.filter(l => l.target === current);
+        for (const l of inLinks) {
+          if (!visited.has(l.source)) {
+            visited.add(l.source);
+            const n = nodes.get(l.source);
+            if (n) { callerNodes.push({ node: n, link: l, relationship: 'transitive_caller' }); queue.push(l.source); }
+          }
+        }
+      }
+      results = callerNodes;
+      description = `All transitive callers of "${nodes.get(node_id)?.label ?? node_id}"`;
+      break;
+    }
+    case 'find_all_callees': {
+      const visited = new Set<string>([node_id]);
+      const queue = [node_id];
+      const calleeNodes: any[] = [];
+      while (queue.length > 0) {
+        const current = queue.shift()!;
+        const outLinks = linkList.filter(l => l.source === current);
+        for (const l of outLinks) {
+          if (!visited.has(l.target)) {
+            visited.add(l.target);
+            const n = nodes.get(l.target);
+            if (n) { calleeNodes.push({ node: n, link: l, relationship: 'transitive_callee' }); queue.push(l.target); }
+          }
+        }
+      }
+      results = calleeNodes;
+      description = `All transitive callees of "${nodes.get(node_id)?.label ?? node_id}"`;
+      break;
+    }
+    case 'find_importers': {
+      const importLinks = linkList.filter(l => l.target === node_id && l.type === 'unidirectional');
+      results = importLinks.map(l => {
+        const importer = nodes.get(l.source);
+        return importer ? { node: importer, link: l, relationship: 'imports' } : null;
+      }).filter(Boolean);
+      description = `Nodes that import "${nodes.get(node_id)?.label ?? node_id}"`;
+      break;
+    }
+    case 'dead_code': {
+      // Nodes with no incoming links (unreferenced)
+      const targeted = new Set(linkList.map(l => l.target));
+      const deadNodes = nodeList.filter(n => !targeted.has(n.id) && n.type !== 'source');
+      results = deadNodes.map(n => ({ node: n, relationship: 'unreferenced' }));
+      description = 'Nodes with no incoming connections (potentially unused)';
+      break;
+    }
+    case 'module_deps': {
+      // Group nodes by type and show inter-type dependencies
+      const typeGroups = new Map<string, KnowledgeNode[]>();
+      for (const n of nodeList) {
+        const group = typeGroups.get(n.type) ?? [];
+        group.push(n);
+        typeGroups.set(n.type, group);
+      }
+      const depSummary: any[] = [];
+      for (const [type, members] of typeGroups) {
+        const ids = new Set(members.map(m => m.id));
+        const outgoing = linkList.filter(l => ids.has(l.source) && !ids.has(l.target));
+        const incoming = linkList.filter(l => ids.has(l.target) && !ids.has(l.source));
+        depSummary.push({ module: type, members: members.length, outgoingDeps: outgoing.length, incomingDeps: incoming.length, fanOut: outgoing.length, fanIn: incoming.length });
+      }
+      results = depSummary;
+      description = 'Module dependency summary grouped by node type';
+      break;
+    }
+    case 'find_complexity': {
+      // Rank nodes by connection count (a proxy for complexity)
+      const complexity = nodeList.map(n => {
+        const out = linkList.filter(l => l.source === n.id).length;
+        const ins = linkList.filter(l => l.target === n.id).length;
+        return { node: n, outDegree: out, inDegree: ins, totalDegree: out + ins, complexityScore: (out * 1.5 + ins) * n.size / 100 };
+      }).sort((a, b) => b.complexityScore - a.complexityScore);
+      results = complexity;
+      description = 'Nodes ranked by estimated complexity (connections × size)';
+      break;
+    }
+    case 'class_hierarchy': {
+      // Hierarchical links
+      const hierarchyLinks = linkList.filter(l => l.type === 'hierarchical');
+      results = hierarchyLinks.map(l => {
+        const parent = nodes.get(l.source);
+        const child = nodes.get(l.target);
+        return parent && child ? { parent, child, link: l, relationship: 'hierarchy' } : null;
+      }).filter(Boolean);
+      description = 'Node hierarchy relationships';
+      break;
+    }
+  }
+
+  res.json({
+    query_type,
+    node_id: node_id || null,
+    description,
+    results: results.slice(0, limit),
+    total: results.length,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get('/metrics/summary', authenticate, (_req, res) => {
   const nowMs = Date.now();
   const recentRequests = requestLog.filter(r => new Date(r.timestamp).getTime() > nowMs - 86400000);

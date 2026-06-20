@@ -18,5 +18,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "graphify-server"]
+  "exclude": ["node_modules", "graphify-server", "CodeGraphContext", "ECC", "academic-research-skills", "acadresearch", "ecc", "taste-skill", "tasteskill", "codegraph", "codegraphctx", "eccrepo", "acadskills"]
 }

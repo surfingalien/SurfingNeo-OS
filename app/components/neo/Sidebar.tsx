@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { LayoutGrid, GitBranch, Server, Zap, Puzzle, Brain, RefreshCw, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { LayoutGrid, GitBranch, Server, Zap, Puzzle, Brain, RefreshCw, Clock, ChevronLeft, ChevronRight, X, Network } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain';
+type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain' | 'code-analysis';
 
 interface SidebarProps {
   view: View;
@@ -21,6 +21,7 @@ const NAV_ITEMS: { id: View; label: string; badge?: string; badgeColor?: string;
   { id: 'skills', label: 'Skills', badge: '14', badgeColor: '#6366f1', icon: <Zap className="w-4 h-4" /> },
   { id: 'plugins', label: 'Plugins', icon: <Puzzle className="w-4 h-4" /> },
   { id: 'brain', label: 'Agentic Brain', icon: <Brain className="w-4 h-4" /> },
+  { id: 'code-analysis', label: 'Code Analysis', badge: 'NEW', badgeColor: '#f59e0b', icon: <Network className="w-4 h-4" /> },
 ];
 
 function useClock() {
