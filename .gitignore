@@ -18,3 +18,16 @@ tsconfig.tsbuildinfo
 .DS_Store
 *.log
 next-env.d.ts
+
+# Reference repos (cloned for development reference only)
+CodeGraphContext/
+ECC/
+academic-research-skills/
+acadresearch/
+ecc/
+taste-skill/
+tasteskill/
+codegraph/
+codegraphctx/
+eccrepo/
+acadskills/
