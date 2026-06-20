@@ -90,7 +90,7 @@ function DashboardContent({ theme, setTheme, onMenuOpen }: { theme: Theme; setTh
         </div>
       </main>
 
-      <footer className="px-6 py-4 border-t mt-4 flex justify-between"
+      <footer className="px-4 md:px-6 py-3 border-t mt-4 flex flex-col sm:flex-row justify-between gap-1"
         style={{ fontSize: '10px', fontFamily: 'monospace', color: 'var(--neo-faint)', borderColor: 'var(--neo-border)' }}>
         <span>SurfingNeo-OS v1.0.0 · Neural Mesh Control Center</span>
         <span>real-time AI operations · us-east-1</span>

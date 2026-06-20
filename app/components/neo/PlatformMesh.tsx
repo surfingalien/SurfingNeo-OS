@@ -66,7 +66,7 @@ export function PlatformMesh() {
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Sparkline values={p.latencyHistory} color={color} />
+                <span className="hidden sm:block"><Sparkline values={p.latencyHistory} color={color} /></span>
                 <motion.span
                   key={p.latency}
                   initial={{ opacity: 0.5, scale: 0.88 }}
