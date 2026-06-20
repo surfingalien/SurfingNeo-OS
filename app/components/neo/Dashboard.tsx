@@ -16,6 +16,7 @@ import { SkillsPage } from './SkillsPage';
 import { PluginsPage } from './PluginsPage';
 import { AgenticBrainPage } from './AgenticBrainPage';
 import { CodeAnalysisPanel } from './CodeAnalysisPanel';
+import { StatsBar } from './StatsBar';
 import { type Theme, type GraphNode } from '@/lib/neo-mock';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Brain, Radio, Cpu, Menu } from 'lucide-react';
@@ -45,6 +46,7 @@ function DashboardContent({ theme, setTheme, onMenuOpen }: { theme: Theme; setTh
   return (
     <>
       <Header theme={theme} setTheme={setTheme} onRefresh={refresh} refreshing={refreshing} lastUpdated={lastUpdated} onMenuOpen={onMenuOpen} />
+      <StatsBar />
       <main className="neo-dashboard-grid px-4 md:px-6 py-5 gap-5">
         {/* Left column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: 0 }}>
