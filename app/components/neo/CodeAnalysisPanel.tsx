@@ -20,23 +20,32 @@ interface QueryDef {
   id: QueryType;
   label: string;
   description: string;
-  icon: JSX.Element;
+  iconKey: 'merge' | 'branch' | 'alert' | 'layers' | 'bar' | 'network';
   needsNodeId: boolean;
   needsStart: boolean;
   category: 'relationship' | 'traversal' | 'analysis';
 }
 
+function QueryIcon({ k }: { k: QueryDef['iconKey'] }) {
+  if (k === 'merge') return <GitMerge className="w-3.5 h-3.5" />;
+  if (k === 'branch') return <GitBranch className="w-3.5 h-3.5" />;
+  if (k === 'alert') return <AlertCircle className="w-3.5 h-3.5" />;
+  if (k === 'layers') return <Layers className="w-3.5 h-3.5" />;
+  if (k === 'bar') return <BarChart2 className="w-3.5 h-3.5" />;
+  return <Network className="w-3.5 h-3.5" />;
+}
+
 const QUERIES: QueryDef[] = [
-  { id: 'find_callers', label: 'Find Callers', description: 'Nodes that depend on the selected node', icon: <GitMerge className="w-3.5 h-3.5" />, needsNodeId: true, needsStart: false, category: 'relationship' },
-  { id: 'find_callees', label: 'Find Callees', description: 'Nodes that the selected node depends on', icon: <GitBranch className="w-3.5 h-3.5" />, needsNodeId: true, needsStart: false, category: 'relationship' },
-  { id: 'find_all_callers', label: 'All Callers (transitive)', description: 'Full upstream dependency chain', icon: <GitMerge className="w-3.5 h-3.5" />, needsNodeId: true, needsStart: false, category: 'relationship' },
-  { id: 'find_all_callees', label: 'All Callees (transitive)', description: 'Full downstream dependency chain', icon: <GitBranch className="w-3.5 h-3.5" />, needsNodeId: true, needsStart: false, category: 'relationship' },
-  { id: 'dead_code', label: 'Dead Nodes', description: 'Unreferenced nodes with no incoming links', icon: <AlertCircle className="w-3.5 h-3.5" />, needsNodeId: false, needsStart: false, category: 'analysis' },
-  { id: 'module_deps', label: 'Module Dependencies', description: 'Fan-in / fan-out summary by node type', icon: <Layers className="w-3.5 h-3.5" />, needsNodeId: false, needsStart: false, category: 'analysis' },
-  { id: 'find_complexity', label: 'Complexity Ranking', description: 'Nodes ranked by connection complexity', icon: <BarChart2 className="w-3.5 h-3.5" />, needsNodeId: false, needsStart: false, category: 'analysis' },
-  { id: 'class_hierarchy', label: 'Node Hierarchy', description: 'Hierarchical relationships in the graph', icon: <Layers className="w-3.5 h-3.5" />, needsNodeId: false, needsStart: false, category: 'analysis' },
-  { id: 'bfs', label: 'BFS Traversal', description: 'Breadth-first traversal from a start node', icon: <Network className="w-3.5 h-3.5" />, needsNodeId: false, needsStart: true, category: 'traversal' },
-  { id: 'dfs', label: 'DFS Traversal', description: 'Depth-first traversal from a start node', icon: <Network className="w-3.5 h-3.5" />, needsNodeId: false, needsStart: true, category: 'traversal' },
+  { id: 'find_callers', label: 'Find Callers', description: 'Nodes that depend on the selected node', iconKey: 'merge', needsNodeId: true, needsStart: false, category: 'relationship' },
+  { id: 'find_callees', label: 'Find Callees', description: 'Nodes that the selected node depends on', iconKey: 'branch', needsNodeId: true, needsStart: false, category: 'relationship' },
+  { id: 'find_all_callers', label: 'All Callers (transitive)', description: 'Full upstream dependency chain', iconKey: 'merge', needsNodeId: true, needsStart: false, category: 'relationship' },
+  { id: 'find_all_callees', label: 'All Callees (transitive)', description: 'Full downstream dependency chain', iconKey: 'branch', needsNodeId: true, needsStart: false, category: 'relationship' },
+  { id: 'dead_code', label: 'Dead Nodes', description: 'Unreferenced nodes with no incoming links', iconKey: 'alert', needsNodeId: false, needsStart: false, category: 'analysis' },
+  { id: 'module_deps', label: 'Module Dependencies', description: 'Fan-in / fan-out summary by node type', iconKey: 'layers', needsNodeId: false, needsStart: false, category: 'analysis' },
+  { id: 'find_complexity', label: 'Complexity Ranking', description: 'Nodes ranked by connection complexity', iconKey: 'bar', needsNodeId: false, needsStart: false, category: 'analysis' },
+  { id: 'class_hierarchy', label: 'Node Hierarchy', description: 'Hierarchical relationships in the graph', iconKey: 'layers', needsNodeId: false, needsStart: false, category: 'analysis' },
+  { id: 'bfs', label: 'BFS Traversal', description: 'Breadth-first traversal from a start node', iconKey: 'network', needsNodeId: false, needsStart: true, category: 'traversal' },
+  { id: 'dfs', label: 'DFS Traversal', description: 'Depth-first traversal from a start node', iconKey: 'network', needsNodeId: false, needsStart: true, category: 'traversal' },
 ];
 
 const KNOWN_NODES = [
@@ -220,7 +229,7 @@ export function CodeAnalysisPanel() {
                       borderLeft: selectedQuery === q.id ? '2px solid var(--neo-primary)' : '2px solid transparent',
                     }}
                   >
-                    <span style={{ color: selectedQuery === q.id ? 'var(--neo-primary)' : 'var(--neo-faint)', marginTop: '1px', flexShrink: 0 }}>{q.icon}</span>
+                    <span style={{ color: selectedQuery === q.id ? 'var(--neo-primary)' : 'var(--neo-faint)', marginTop: '1px', flexShrink: 0 }}><QueryIcon k={q.iconKey} /></span>
                     <div>
                       <div style={{ fontSize: '12px', fontWeight: selectedQuery === q.id ? 600 : 400, color: selectedQuery === q.id ? 'var(--neo-text)' : 'var(--neo-muted)' }}>{q.label}</div>
                       <div style={{ fontSize: '10px', color: 'var(--neo-faint)', marginTop: '1px', lineHeight: 1.3 }}>{q.description}</div>
