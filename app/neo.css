@@ -94,6 +94,13 @@ body {
 @keyframes spin { to { transform: rotate(360deg); } }
 .neo-spin { animation: spin 1s linear infinite; }
 
+/* ── Scrollable stats bar (hides scrollbar visually) ── */
+.neo-stats-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.neo-stats-scroll::-webkit-scrollbar { display: none; }
+
 /* ── Responsive layout helpers ── */
 .neo-dashboard-grid {
   display: grid;

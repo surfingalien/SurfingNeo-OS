@@ -39,9 +39,9 @@ export function Header({ theme, setTheme, onRefresh, refreshing, lastUpdated, on
             <Activity className="w-4 h-4 text-white" strokeWidth={2.5} />
             <span className="absolute -inset-1 rounded-lg opacity-30 blur animate-pulse" style={{ background: 'var(--neo-primary)' }} />
           </div>
-          <div className="leading-tight">
-            <div className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--neo-text)' }}>SurfingNeo-OS</div>
-            <div className="text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--neo-muted)' }}>Neural Mesh Control Center</div>
+          <div className="leading-tight min-w-0">
+            <div className="text-[14px] sm:text-[15px] font-semibold tracking-tight truncate" style={{ color: 'var(--neo-text)' }}>SurfingNeo-OS</div>
+            <div className="hidden sm:block text-[10px] uppercase tracking-[0.14em]" style={{ color: 'var(--neo-muted)' }}>Neural Mesh Control Center</div>
           </div>
         </div>
 
@@ -51,14 +51,14 @@ export function Header({ theme, setTheme, onRefresh, refreshing, lastUpdated, on
           <StatusPill name="SSE" ok />
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="text-[11px] font-mono" style={{ color: 'var(--neo-muted)' }}>updated {sec}s ago</div>
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="hidden sm:block text-[11px] font-mono" style={{ color: 'var(--neo-muted)' }}>updated {sec}s ago</div>
           <button onClick={onRefresh} className="w-8 h-8 rounded-md border flex items-center justify-center transition-colors hover:opacity-80" style={{ borderColor: 'var(--neo-border)', color: 'var(--neo-muted)' }}>
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'neo-spin' : ''}`} />
           </button>
           <div className="relative">
-            <button onClick={() => setOpen(o => !o)} className="h-8 px-3 rounded-md border text-xs flex items-center gap-2 transition-colors" style={{ borderColor: 'var(--neo-border)', color: 'var(--neo-text)' }}>
-              <span>{current.emoji}</span><span>{current.name}</span>
+            <button onClick={() => setOpen(o => !o)} className="h-8 px-2 sm:px-3 rounded-md border text-xs flex items-center gap-1.5 sm:gap-2 transition-colors" style={{ borderColor: 'var(--neo-border)', color: 'var(--neo-text)' }}>
+              <span>{current.emoji}</span><span className="hidden sm:inline">{current.name}</span>
             </button>
             <AnimatePresence>
               {open && (

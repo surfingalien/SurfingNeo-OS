@@ -47,7 +47,7 @@ function KPICell({ label, value, unit = '', trend, sub, pulse = false }: {
 
   return (
     <div style={{
-      flex: 1, minWidth: 0, padding: '10px 16px',
+      flex: '0 0 auto', minWidth: '120px', padding: '10px 14px',
       borderRight: '1px solid var(--neo-border)',
       display: 'flex', flexDirection: 'column', gap: '2px',
     }}>
@@ -71,7 +71,7 @@ function KPICell({ label, value, unit = '', trend, sub, pulse = false }: {
           </span>
         )}
       </div>
-      {sub && <div style={{ fontSize: '10px', color: 'var(--neo-faint)', fontFamily: 'monospace' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: '10px', color: 'var(--neo-faint)', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{sub}</div>}
     </div>
   );
 }
@@ -98,10 +98,10 @@ export function StatsBar() {
   if (!data) return (
     <div style={{
       display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--neo-border)',
-      padding: '14px 24px', gap: '8px',
+      padding: '12px 16px', gap: '8px', overflowX: 'hidden',
     }}>
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} style={{ flex: 1, height: '36px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.5s infinite' }} />
+        <div key={i} style={{ flex: 1, minWidth: '80px', height: '36px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', animation: 'pulse 1.5s infinite' }} />
       ))}
     </div>
   );
@@ -112,47 +112,50 @@ export function StatsBar() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          display: 'flex', alignItems: 'stretch',
           borderBottom: '1px solid var(--neo-border)',
           background: 'rgba(255,255,255,0.015)',
+          overflowX: 'auto',
         }}
+        className="neo-stats-scroll"
       >
-        <KPICell
-          label="Knowledge Nodes" pulse
-          value={data.knowledgeBase.totalNodes}
-          sub={`+${data.knowledgeBase.growthRate}%/mo · ${data.knowledgeBase.totalEdges} edges`}
-          trend={data.knowledgeBase.growthRate}
-        />
-        <KPICell
-          label="API Requests"
-          value={data.apiBrain.totalRequests}
-          sub={`${data.apiBrain.avgLatencyMs}ms avg · ${data.apiBrain.uptimePercent}% up`}
-        />
-        <KPICell
-          label="Insights"
-          value={data.secondaryBrain.insightsGenerated}
-          sub={`${(data.secondaryBrain.accuracyScore * 100).toFixed(0)}% accuracy`}
-        />
-        <KPICell
-          label="Brain Score"
-          value={data.improvement.overall.score}
-          unit="pts"
-          trend={data.improvement.overall.trend}
-          sub={lastFetch ? `updated ${lastFetch.toTimeString().slice(0, 8)}` : ''}
-        />
-        <KPICell
-          label="MCP Calls"
-          value={data.connections.mcpInvocationsToday}
-          sub={`${data.connections.sseClients} SSE · ${data.source}`}
-        />
-        <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center' }}>
-          <div style={{
-            fontSize: '9px', fontFamily: 'monospace', padding: '3px 7px', borderRadius: '4px',
-            background: data.source === 'graphify-live' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.1)',
-            color: data.source === 'graphify-live' ? '#10b981' : 'var(--neo-muted)',
-            border: `1px solid ${data.source === 'graphify-live' ? 'rgba(16,185,129,0.3)' : 'var(--neo-border)'}`,
-          }}>
-            {data.source === 'graphify-live' ? '● LIVE' : '○ HYBRID'}
+        <div style={{ display: 'flex', alignItems: 'stretch', minWidth: 'max-content' }}>
+          <KPICell
+            label="Knowledge Nodes" pulse
+            value={data.knowledgeBase.totalNodes}
+            sub={`+${data.knowledgeBase.growthRate}%/mo · ${data.knowledgeBase.totalEdges} edges`}
+            trend={data.knowledgeBase.growthRate}
+          />
+          <KPICell
+            label="API Requests"
+            value={data.apiBrain.totalRequests}
+            sub={`${data.apiBrain.avgLatencyMs}ms avg · ${data.apiBrain.uptimePercent}% up`}
+          />
+          <KPICell
+            label="Insights"
+            value={data.secondaryBrain.insightsGenerated}
+            sub={`${(data.secondaryBrain.accuracyScore * 100).toFixed(0)}% accuracy`}
+          />
+          <KPICell
+            label="Brain Score"
+            value={data.improvement.overall.score}
+            unit="pts"
+            trend={data.improvement.overall.trend}
+            sub={lastFetch ? `updated ${lastFetch.toTimeString().slice(0, 8)}` : ''}
+          />
+          <KPICell
+            label="MCP Calls"
+            value={data.connections.mcpInvocationsToday}
+            sub={`${data.connections.sseClients} SSE · ${data.source}`}
+          />
+          <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{
+              fontSize: '9px', fontFamily: 'monospace', padding: '3px 7px', borderRadius: '4px',
+              background: data.source === 'graphify-live' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.1)',
+              color: data.source === 'graphify-live' ? '#10b981' : 'var(--neo-muted)',
+              border: `1px solid ${data.source === 'graphify-live' ? 'rgba(16,185,129,0.3)' : 'var(--neo-border)'}`,
+            }}>
+              {data.source === 'graphify-live' ? '● LIVE' : '○ HYBRID'}
+            </div>
           </div>
         </div>
       </motion.div>
