@@ -1,6 +1,19 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { metrics } from '@/lib/neo-mock';
+import { metrics as mockMetrics } from '@/lib/neo-mock';
+
+interface BrainMetrics {
+  knowledgeBase: { totalNodes: number; totalEdges: number; growthRate: number };
+  apiBrain: { avgLatencyMs: number; errorRate: number; uptimePercent: number };
+  secondaryBrain: { insightsGenerated: number; accuracyScore: number };
+  improvement: {
+    apiBrain: { score: number; trend: number };
+    secondaryBrain: { score: number; trend: number };
+    knowledgeGraph: { score: number; trend: number };
+    overall: { score: number; trend: number };
+  };
+}
 
 function Ring({ score }: { score: number }) {
   const r = 52, c = 2 * Math.PI * r;
@@ -20,7 +33,11 @@ function Ring({ score }: { score: number }) {
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-3xl font-bold tabular-nums" style={{ color: 'var(--neo-text)' }}>{score}</div>
+        <motion.div
+          key={score}
+          initial={{ opacity: 0.5, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-3xl font-bold tabular-nums" style={{ color: 'var(--neo-text)' }}>{score}</motion.div>
         <div className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--neo-muted)' }}>overall</div>
       </div>
     </div>
@@ -33,7 +50,8 @@ function SubScore({ name, score, trend, lines }: { name: string; score: number; 
       <div className="flex justify-between items-baseline mb-1">
         <div className="text-xs font-medium" style={{ color: 'var(--neo-text)' }}>{name}</div>
         <div className="flex items-baseline gap-1.5">
-          <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--neo-text)' }}>{score}</span>
+          <motion.span key={score} initial={{ opacity: 0.6 }} animate={{ opacity: 1 }}
+            className="text-sm font-bold tabular-nums" style={{ color: 'var(--neo-text)' }}>{score}</motion.span>
           <span className={`text-[10px] font-mono ${trend > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {trend > 0 ? '▲' : '▼'}{Math.abs(trend).toFixed(1)}
           </span>
@@ -52,7 +70,22 @@ function SubScore({ name, score, trend, lines }: { name: string; score: number; 
 }
 
 export function BrainHealth() {
-  const m = metrics;
+  const [m, setM] = useState<BrainMetrics>(mockMetrics);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/metrics');
+        if (!res.ok) return;
+        const data = await res.json();
+        setM(data);
+      } catch { /* keep last value */ }
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="p-4">
       <div className="flex justify-center mb-4"><Ring score={m.improvement.overall.score} /></div>
