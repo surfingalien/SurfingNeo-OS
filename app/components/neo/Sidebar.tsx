@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { LayoutGrid, GitBranch, Server, Zap, Puzzle, Brain, RefreshCw, Clock, ChevronLeft, ChevronRight, X, Network } from 'lucide-react';
+import { LayoutGrid, GitBranch, Server, Zap, Puzzle, Brain, RefreshCw, Clock, ChevronLeft, ChevronRight, X, Network, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain' | 'code-analysis';
+type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain' | 'code-analysis' | 'graph-explorer';
 
 interface SidebarProps {
   view: View;
@@ -17,6 +17,7 @@ interface SidebarProps {
 const NAV_ITEMS: { id: View; label: string; badge?: string; badgeColor?: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutGrid className="w-4 h-4" /> },
   { id: 'graphify', label: 'Graphify', badge: 'LIVE', badgeColor: '#10b981', icon: <GitBranch className="w-4 h-4" /> },
+  { id: 'graph-explorer', label: 'Graph Explorer', badge: 'NEW', badgeColor: '#22d3ee', icon: <Share2 className="w-4 h-4" /> },
   { id: 'mcp', label: 'MCP Servers', badge: '10', badgeColor: '#6366f1', icon: <Server className="w-4 h-4" /> },
   { id: 'skills', label: 'Skills', badge: '14', badgeColor: '#6366f1', icon: <Zap className="w-4 h-4" /> },
   { id: 'plugins', label: 'Plugins', icon: <Puzzle className="w-4 h-4" /> },

@@ -16,13 +16,14 @@ import { SkillsPage } from './SkillsPage';
 import { PluginsPage } from './PluginsPage';
 import { AgenticBrainPage } from './AgenticBrainPage';
 import { CodeAnalysisPanel } from './CodeAnalysisPanel';
+import { GraphExplorerPage } from './GraphExplorerPage';
 import { StatsBar } from './StatsBar';
 import { type Theme, type GraphNode } from '@/lib/neo-mock';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Brain, Radio, Cpu, Menu } from 'lucide-react';
 
 type Tab = 'topology' | 'platforms' | 'trajectory';
-type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain' | 'code-analysis';
+type View = 'dashboard' | 'graphify' | 'mcp' | 'skills' | 'plugins' | 'brain' | 'code-analysis' | 'graph-explorer';
 
 const TABS: { id: Tab; label: string; emoji: string }[] = [
   { id: 'topology', label: 'Topology', emoji: '🔗' },
@@ -194,6 +195,7 @@ export function Dashboard() {
             {view === 'plugins' && <PluginsPage />}
             {view === 'brain' && <AgenticBrainPage />}
             {view === 'code-analysis' && <CodeAnalysisPanel />}
+            {view === 'graph-explorer' && <GraphExplorerPage />}
           </motion.div>
         </AnimatePresence>
       </div>
